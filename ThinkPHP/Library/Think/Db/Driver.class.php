@@ -308,7 +308,6 @@ abstract class Driver
 			    return '\'' . $that->escapeString($val) . '\'';
 			}, $this->bind));
 	    }
-	    //echo $this->queryStr.'<br/>';
 	    if ($fetchSql)
 	    {
 		return $this->queryStr;
