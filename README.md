@@ -66,7 +66,7 @@ vi YourServer.php
 //就酱，DIServer框架会自动创建目录
 require_once '{$DIServerPath}\DIServer.php';
 ```
-
+##### 在Shell中执行
 ```shell
 php YourServer.php
 ```
