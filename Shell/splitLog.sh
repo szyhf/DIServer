@@ -19,10 +19,10 @@ do
                 #生成备份日志的绝对路径及文件名称
                 bakLogPath="${logPath}."`date -d yesterday "+%Y%m%d"`
                 cat $logPath > $bakLogPath
-                cat $bakLogPath |egrep "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[i]\]" > $bakLogPath."info"
-                cat $bakLogPath |egrep "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[e]\]" > $bakLogPath."error"
-                cat $bakLogPath |egrep "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[w]\]" > $bakLogPath."warn"
-                cat $bakLogPath |egrep -v "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[wie]{1}\]" > $bakLogPath."other"
+#                cat $bakLogPath |egrep "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[i]\]" > $bakLogPath."info"
+#                cat $bakLogPath |egrep "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[e]\]" > $bakLogPath."error"
+#                cat $bakLogPath |egrep "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[w]\]" > $bakLogPath."warn"
+#                cat $bakLogPath |egrep -v "^\[[0-9]{4}-[01][0-9]-[0-3][0-9] [01][0-9]:[0-5][0-9]:[0-5][0-9]\]\[[wie]{1}\]" > $bakLogPath."other"
                 cat /dev/null > $logPath
         done
 done

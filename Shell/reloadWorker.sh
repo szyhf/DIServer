@@ -8,9 +8,10 @@ appDirPath=$(cd `dirname $0`; pwd)"/../"
 fileList=`ls $appDirPath|grep ${1}Server$`
 for file in $fileList
 do
+	echo $file
 	#目录名以Server结尾的，即需要关注的进程名${ServerName}.php
 	serverName="${file}.php"
 	psID=$(pstree -ap |grep "^  |-php,[0-9]* ${serverName}"|awk -F , '{print $2}'|awk '{print $1}')
-	echo $file": kill -10 "$psID
+	echo $psID
 	kill -10 $psID
 done
