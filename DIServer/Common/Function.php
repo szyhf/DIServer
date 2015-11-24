@@ -16,12 +16,12 @@ function DILog($msg, $level = "i")
     }
     else if (is_object($msg))
     {
-	echo date("[Y-m-d H:i:s]") . "\n";
+	echo date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . ']' . "\n";
 	var_dump($msg);
     }
     else
     {
-	echo date("[Y-m-d H:i:s]") . "[{$level}]  [".  posix_getpid() .']'. $msg . "\n";
+	echo date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . '] ' . $msg . "\n";
     }
 }
 
@@ -62,13 +62,17 @@ function DIHandler($idOrHandler = NULL)
 	//传入的处理器是合法的处理器	
 	/* @var $handler DIServer\BaseHandler */
 	$handler = $idOrHandler;
-	if (isset($_handlers[$handler->ID()]))
+	if (is_numeric($handler->ID()))
 	{
-	    $_handlers[$handler->ID()][] = $handler;
+	    if (isset($_handlers[$handler->ID()]))
+	    {
+		$_handlers[$handler->ID()][] = $handler;
+	    }
+	    else
+		$_handlers[$handler->ID()] = [$handler];
+	    DILog(get_class($handler) . ' was loaded.', 'n');
+	    return TRUE;
 	}
-	else
-	    $_handlers[$handler->ID()] = [$handler];
-	return TRUE;
     }
     return FALSE;
 }
@@ -177,7 +181,7 @@ function AllFile($directory = __DIR__, $recu = false, $ext = '')
     $mydir = dir($directory);
     if (!$mydir)
     {
-	DILog("$directory is not exist or available.",'w');
+	DILog("$directory is not exist or available.", 'w');
 	return [];
     }
     $files = [];
