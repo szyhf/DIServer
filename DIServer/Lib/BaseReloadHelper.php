@@ -29,7 +29,7 @@ class BaseReloadHelper
 
     public function OnPipeMessage(\swoole_server &$server, &$from_worker_id, &$message)
     {
-	
+	DILog("pipe from {$from_worker_id}: {$message}");
     }
 
     public function OnReceive(\swoole_server &$server, &$fd, &$from_id, &$data)
@@ -55,11 +55,11 @@ class BaseReloadHelper
 
     public function OnTask(\swoole_server &$server, &$task_id, &$from_id, &$param)
     {
-	/* @var $handler \DIServer\BaseHandler */
+	/* @var $handler \DIServer\DIHandler */
 	$handler = DIHandler($param['handlerID'])[$param['handlersKey']];
-	if(!$handler)
+	if (!$handler)
 	{
-	    DILog("Calling On not exist HandlerID ".$param['handlerID'].".");
+	    DILog("Calling On not exist HandlerID " . $param['handlerID'] . ".");
 	    return;
 	}
 	$info = $server->connection_info($data['fd'], $from_id);
@@ -128,10 +128,10 @@ class BaseReloadHelper
 	if ($cliHandlerID !== NULL)
 	{
 	    $handlerParams = [
-			'fd' => $fd,//客户端的唯一标识，用于回发信息
-			'params' => $data//客户端的完整报文
-		    ];//传入标准的解析参数
-	    DICallHandler($cliHandlerID,$server, $handlerParams);
+		'fd' => $fd, //客户端的唯一标识，用于回发信息
+		'params' => $data//客户端的完整报文
+	    ]; //传入标准的解析参数
+	    DICallHandler($cliHandlerID, $server, $handlerParams);
 	}
     }
 
@@ -203,7 +203,7 @@ class BaseReloadHelper
 	//重载DIServer/Handler
 	$handlerFiles = AllFile(DI_HANDLER_PATH, true, 'Handler.php');
 	DILoadHandler($handlerFiles, $whiteList, $blackList, '\DIServer\Handler');
-	
+
 	//重载Common/Handler
 	$handlerFiles = AllFile(DI_APP_COMMON_HANDLER_PATH, true, 'Handler.php');
 	DILoadHandler($handlerFiles, $whiteList, $blackList, '\Common\Handler');
@@ -235,10 +235,11 @@ class BaseReloadHelper
 	$tickerFiles = AllFile(DI_APP_SERVER_TICKER_PATH, TRUE, 'Ticker.php');
 	DILoadTicker($tickerFiles, "\\" . DI_SERVER_NAME . "\Ticker");
     }
-    
+
     private function ReloadService()
     {
 	//重载ServerWorker级的Service
 	AutoRequire(DI_APP_SERVER_SERVICE_PATH, TRUE, 'Service.php');
     }
+
 }
