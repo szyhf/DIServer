@@ -3,11 +3,11 @@ DIServer Framework
 
 ## 简介
 
-一个由swoole_server提供网络服务，ThinkPHP提供ORM等其它工具的TCP/UDP网络服务框架。
++ 一个由swoole_server提供网络服务，ThinkPHP提供ORM等其它工具的TCP/UDP网络服务框架。
 
-这个文档暂时没写完，Demo还在整理中，暂时来说这个东西还不算能用。
++ 这个文档暂时没写完，Demo还在整理中，暂时来说这个东西还不算能用。
 
-我会尝试整理出[wiki](https://github.com/szyhf/DIServer-Framework/wiki)
++ 我会尝试整理出[wiki](https://github.com/szyhf/DIServer-Framework/wiki)
 
 ## 特性
 
@@ -27,8 +27,7 @@ DIServer Framework
 
 ## 其它
 - [ThinkPHP3.2.3](https://github.com/liu21st/thinkphp)
-- 因为原生的ThinkPHP是面向Web开发的，需要进行一些改造才能适应
-- 常驻服务的特性，请使用我提供的ThinkPHP版本。
+- 因为原生的ThinkPHP是面向Web开发的，需要进行一些改造才能适应常驻服务的特性，请使用我提供的ThinkPHP版本。
 
 ## 说明
 
