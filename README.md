@@ -13,3 +13,9 @@ DIServer
 
 3、好久没用git了我想想这东西怎么用先=。=
 
+基于：
+
+ThinkPHP 3.2.3: https://github.com/liu21st/thinkphp
+
+swoole : https://github.com/swoole/swoole-src
+(从1.7.17开始开发，随着版本更新目前确定在1.7.20-stable可用）
