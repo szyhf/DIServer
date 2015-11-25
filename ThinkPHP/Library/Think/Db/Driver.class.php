@@ -268,17 +268,17 @@ abstract class Driver
 		    continue; //重试
 		}
 	    }
-	    // 调试结束
-	    $this->debug(false);
-	    if (false === $result)
-	    {
-		$this->error();
-		return false;
-	    }
-	    else
-	    {
-		return $this->getResult();
-	    }
+	}
+	// 调试结束
+	$this->debug(false);
+	if (false === $result)
+	{
+	    $this->error();
+	    return false;
+	}
+	else
+	{
+	    return $this->getResult();
 	}
     }
 
@@ -356,21 +356,21 @@ abstract class Driver
 		    continue; //重试
 		}
 	    }
-	    $this->debug(false);
-	    if (false === $result)
+	}
+	$this->debug(false);
+	if (false === $result)
+	{
+	    $this->error();
+	    return false;
+	}
+	else
+	{
+	    $this->numRows = $this->PDOStatement->rowCount();
+	    if (preg_match("/^\s*(INSERT\s+INTO|REPLACE\s+INTO)\s+/i", $str))
 	    {
-		$this->error();
-		return false;
+		$this->lastInsID = $this->_linkID->lastInsertId();
 	    }
-	    else
-	    {
-		$this->numRows = $this->PDOStatement->rowCount();
-		if (preg_match("/^\s*(INSERT\s+INTO|REPLACE\s+INTO)\s+/i", $str))
-		{
-		    $this->lastInsID = $this->_linkID->lastInsertId();
-		}
-		return $this->numRows;
-	    }
+	    return $this->numRows;
 	}
     }
 
