@@ -1,8 +1,9 @@
 <?php
 
 namespace DIServer;
-if(php_sapi_name()!=='cli')
-    die ('Should run in CLI mode.');
+
+if (php_sapi_name() !== 'cli')
+    die('Should run in CLI mode.');
 
 // 检测PHP环境
 if (version_compare(PHP_VERSION, '5.5.0', '<'))
@@ -12,15 +13,15 @@ if (version_compare(\swoole_version(), '1.7.17', '<'))
     die('Require swoole > 1.7.17');
 
 \defined('DI_DAEMONIZE') or \define('DI_DAEMONIZE', 0);
-\defined('DI_CHECK_SERVER_DIR') or define('DI_CHECK_SERVER_DIR',1);
+\defined('DI_CHECK_SERVER_DIR') or define('DI_CHECK_SERVER_DIR', 1);
 //框架级
 \defined('DI_DISERVER_PATH') or \define('DI_DISERVER_PATH', __DIR__);
 \defined('DI_COMMON_PATH') or \define('DI_COMMON_PATH', DI_DISERVER_PATH . '/Common');
 \defined('DI_CONFIG_PATH') or \define('DI_CONFIG_PATH', DI_DISERVER_PATH . '/Conf');
 \defined('DI_LIB_PATH') or \define('DI_LIB_PATH', DI_DISERVER_PATH . '/Lib');
-\defined('DI_REQUEST_PATH') or \define('DI_REQUEST_PATH', DI_LIB_PATH.'/Request');
-\defined('DI_HANDLER_PATH') or \define('DI_HANDLER_PATH', DI_LIB_PATH.'/Handler');
-\defined('DI_TICKER_PATH') or \define('DI_TICKER_PATH',DI_LIB_PATH.'/Ticker');
+\defined('DI_REQUEST_PATH') or \define('DI_REQUEST_PATH', DI_LIB_PATH . '/Request');
+\defined('DI_HANDLER_PATH') or \define('DI_HANDLER_PATH', DI_LIB_PATH . '/Handler');
+\defined('DI_TICKER_PATH') or \define('DI_TICKER_PATH', DI_LIB_PATH . '/Ticker');
 //APP级
 \defined('DI_APP_PATH') or \define('DI_APP_PATH', realpath(APP_PATH));
 \defined('DI_APP_COMMON_PATH') or \define('DI_APP_COMMON_PATH', DI_APP_PATH . '/Common');
@@ -31,7 +32,7 @@ if (version_compare(\swoole_version(), '1.7.17', '<'))
 \defined('DI_SERVER_NAME') or die('DI_SERVER_NAME should set');
 \defined('DI_APP_SERVER_PATH') or \define('DI_APP_SERVER_PATH', DI_APP_PATH . '/' . DI_SERVER_NAME);
 \defined('DI_APP_SERVER_COMMON_PATH') or \define('DI_APP_SERVER_COMMON_PATH', DI_APP_SERVER_PATH . '/Common');
-\defined('DI_APP_SERVER_CONF_PATH') or \define('DI_APP_SERVER_CONF_PATH',DI_APP_SERVER_PATH . '/Conf');
+\defined('DI_APP_SERVER_CONF_PATH') or \define('DI_APP_SERVER_CONF_PATH', DI_APP_SERVER_PATH . '/Conf');
 \defined('DI_APP_SERVER_HANDLER_PATH') or \define('DI_APP_SERVER_HANDLER_PATH', DI_APP_SERVER_PATH . '/Handler');
 \defined('DI_APP_SERVER_REQUEST_PATH') or \define('DI_APP_SERVER_REQUEST_PATH', DI_APP_SERVER_PATH . '/Request');
 \defined('DI_APP_SERVER_SERVICE_PATH') or \define('DI_APP_SERVER_SERVICE_PATH', DI_APP_SERVER_PATH . '/Service');
@@ -68,16 +69,16 @@ class DIServer
 	//惯例方法提供核心支持，在对象外加载
 	$this->LoadDIFunction(); //惯例方法
 	register_shutdown_function('PHPFatal'); //处理php自身致命错误
-	$this->LoadDIConfig();//惯例配置
+	$this->LoadDIConfig(); //惯例配置
 	$this->LoadDILibrary(); //加载DIServer工具库
 //	$this->LoadCommonFunction();//公共方法（已经在ThinkPHP中被加载）
 //	$this->LoadCommonConfig();//公共配置（已经在ThinkPHP中被加载）
-	
-	if(DI_CHECK_SERVER_DIR)
-	{	    
-	    \DIServer\Build::checkDir(DI_SERVER_NAME);	    
+
+	if (DI_CHECK_SERVER_DIR)
+	{
+	    \DIServer\Build::checkDir(DI_SERVER_NAME);
 	}
-	
+
 	$this->LoadServerFunction(); //应用方法
 	$this->LoadServerConfig(); //应用配置
 	//初始化应用服务，设置监听
@@ -88,7 +89,7 @@ class DIServer
 
 	//设置回调
 	$this->InitServerCallBack();
-	
+
 	//设置回调方法
 	$this->SetOnServer();
 
@@ -169,12 +170,12 @@ class DIServer
 		    //添加被监听的端口
 		    $this->server->addlistener($listener['Host'], $listener['Port'], $listener['Type']);
 		}
-		DILog("A listener is set on {$listener['Host']}:{$listener['Port']},for type {$listener['Type']}.");
+		DILog("A listener is set on {$listener['Host']}:{$listener['Port']},for type {$listener['Type']}.",'n');
 	    }
 	}
 	else
 	{
-	    die("DI_LISTENERS尚未配置。\n");
+	    DILog("DI_LISTENERS尚未配置。",'e');
 	}
     }
 
@@ -199,27 +200,30 @@ class DIServer
 		$DISettingMap[$key] = $set;
 	    }
 	}
-	
-	if(!is_array($DISettingMap))
-	    die("\$DISettingMap init failed.\n");
-	
+
+	if (!is_array($DISettingMap))
+	{
+	    DILog('$DISettingMap init failed.','e');
+	    exit();
+	}
+
 	//守护进程化的配置特例处理
 	$DISettingMap['daemonize'] = DI_DAEMONIZE;
-	
+
 	$this->server->set($DISettingMap);
     }
 
     protected function InitServerCallBack()
     {
 	//初始化基类
-	$baseCallBackClass = new \ReflectionClass("DIServer\BaseCallBack");
+	$baseCallBackClass = new \ReflectionClass("DIServer\CallBack");
 	$callBackFilePath = DI_APP_SERVER_WORKER_PATH . '/CallBack.php';
 	if (file_exists($callBackFilePath))
 	{
 	    require_cache($callBackFilePath);
 	    try
 	    {
-		$className = DI_SERVER_NAME . '\\Worker\\CallBack';
+		$className = DI_SERVER_NAME . '\\Worker\\CallBack';		
 		$callBackClass = new \ReflectionClass($className);
 		//生成
 		if ($callBackClass->isSubclassOf($baseCallBackClass))
@@ -233,10 +237,10 @@ class DIServer
 		DILog("ReflectionException On {$callBackFile}:{$ex->getMessage()}");
 	    }
 	}
-	DILog("Can't Create {$callBackFilePath}, Use default BaseCallBack.");
+	DILog("Can't Create {$callBackFilePath}, Use default BaseCallBack.",'n');
 	$this->callBack = $baseCallBackClass->newInstance();
     }
-    
+
     /**
      * 设置回调
      */
@@ -244,7 +248,7 @@ class DIServer
     {
 	if ($this->server)
 	{
-	    $callBack = $this->callBack;
+	    $callBack = &$this->callBack;
 	    $this->server->on("start", [$callBack, 'OnStart']);
 	    $this->server->on("connect", [$callBack, 'OnConnect']);
 	    $this->server->on("receive", [$callBack, 'OnReceive']);
@@ -256,7 +260,7 @@ class DIServer
 	    $this->server->on('WorkerStop', [$callBack, 'OnWorkerStop']);
 	    $this->server->on('WorkerError', [$callBack, 'OnWorkerError']);
 	    $this->server->on('PipeMessage', [$callBack, 'OnPipeMessage']);
-	    DILog('Swoole_version is ' . swoole_version());
+	    DILog('Swoole_version is ' . swoole_version(),'n');
 	    if (version_compare(\swoole_version(), '1.7.17'))
 	    {
 		//OnPacket方法与现有的基于Receive的业务逻辑有差异，暂时不支持。

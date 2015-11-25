@@ -7,7 +7,7 @@ namespace DIServer;
  *
  * @author Back
  */
-class BaseCallBack
+class CallBack
 {
 
     /**
@@ -18,13 +18,13 @@ class BaseCallBack
     public function OnStart(\swoole_server $server)
     {
 	//不能热重启
-	DILog(DI_SERVER_NAME . " Start");
+	DILog(DI_SERVER_NAME . " Start",'n');
     }
 
     public function OnShutdown(\swoole_server $server)
     {
 	//不能热重启
-	DILog(DI_SERVER_NAME . " Shutdown");
+	DILog(DI_SERVER_NAME . " Shutdown",'n');
     }
 
     public function OnWorkerStart(\swoole_server $server, $worker_id)
@@ -85,7 +85,7 @@ class BaseCallBack
     protected function InitWorkerReloadHelper()
     {
 	//初始化基类
-	$baseReloadHelperClass = new \ReflectionClass("DIServer\BaseReloadHelper");
+	$baseReloadHelperClass = new \ReflectionClass("DIServer\ReloadHelper");
 	$reloadHelperFilePath = DI_APP_SERVER_WORKER_PATH . '/ReloadHelper.php';
 	if (file_exists($reloadHelperFilePath))
 	{
@@ -103,10 +103,10 @@ class BaseCallBack
 	    }
 	    catch (\ReflectionException $ex)
 	    {
-		DILog("ReflectionException On {$reloadHelperFile}:{$ex->getMessage()}");
+//		DILog("ReflectionException On {$reloadHelperFile}:{$ex->getMessage()}",'n');
 	    }
 	}
-	DILog("Can't Create {$reloadHelperFilePath}, Use default BaseReloadHelper.");
+	DILog("Can't Create {$reloadHelperFilePath}, Use default BaseReloadHelper.",'n');
 	$this->ReloadHelper = $baseReloadHelperClass->newInstance();
     }
 

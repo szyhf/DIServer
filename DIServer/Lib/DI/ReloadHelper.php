@@ -7,7 +7,7 @@ namespace DIServer;
  *
  * @author Back
  */
-class BaseReloadHelper
+class ReloadHelper
 {
 
     public function OnConnect(\swoole_server &$server, &$fd, &$from_id)
@@ -55,7 +55,7 @@ class BaseReloadHelper
 
     public function OnTask(\swoole_server &$server, &$task_id, &$from_id, &$param)
     {
-	/* @var $handler \DIServer\DIHandler */
+	/* @var $handler \DIServer\Handler */
 	$handler = DIHandler($param['handlerID'])[$param['handlersKey']];
 	if (!$handler)
 	{
@@ -89,7 +89,7 @@ class BaseReloadHelper
 	$this->ReloadWorkerFunction();
 	$this->ReloadWorkerConfig();
 	$this->ReloadRequest();
-	$this->ReloadHandler();
+	$this->ReloadHandler($server);
 	$this->ReloadService();
 
 	if (!$server->taskworker)//定时器不能运行在TaskWorker上。
@@ -187,8 +187,9 @@ class BaseReloadHelper
 
     /**
      * 重新加载Handler
+     * @param \swoole_server $server 要注入到handler中的当前进程的swoole_server对象
      */
-    private function ReloadHandler()
+    private function ReloadHandler(\swoole_server &$server)
     {
 	$whiteList = C('HANDLER_WHITE_LIST');
 	if (!is_array($whiteList))
@@ -199,18 +200,18 @@ class BaseReloadHelper
 	{
 	    $blackList = []; //未设置则初始话一个默认的空数组
 	}
-
+	
 	//重载DIServer/Handler
 	$handlerFiles = AllFile(DI_HANDLER_PATH, true, 'Handler.php');
-	DILoadHandler($handlerFiles, $whiteList, $blackList, '\DIServer\Handler');
+	DILoadHandler($handlerFiles, $whiteList, $blackList, '\DIServer\Handler', $server);
 
 	//重载Common/Handler
 	$handlerFiles = AllFile(DI_APP_COMMON_HANDLER_PATH, true, 'Handler.php');
-	DILoadHandler($handlerFiles, $whiteList, $blackList, '\Common\Handler');
+	DILoadHandler($handlerFiles, $whiteList, $blackList, '\Common\Handler', $server);
 
 	//重载Server/Handler	
 	$handlerFiles = AllFile(DI_APP_SERVER_HANDLER_PATH, true, 'Handler.php');
-	DILoadHandler($handlerFiles, $whiteList, $blackList, "\\" . DI_SERVER_NAME . "\Handler");
+	DILoadHandler($handlerFiles, $whiteList, $blackList, "\\" . DI_SERVER_NAME . "\Handler", $server);
     }
 
     private function ReloadRequest()

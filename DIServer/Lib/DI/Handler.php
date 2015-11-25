@@ -9,20 +9,30 @@ namespace DIServer;
  */
 abstract class Handler
 {
-    public function __construct()
+    /* @var $server \swoole_server */
+    protected $server;
+    /**
+     * 初始化Handler
+     * @param \swoole_server $server 注入当前进程的$server对象
+     */
+    public function __construct(&$server = null)
     {
-//	DILog($className . 'ID');
 	$className = array_pop(explode('\\', get_called_class()));
 	//如果ID被子类设置了，则沿用子类的设置；如果没有，尝试从配置文件中获取;
-	$this->ID = $this->ID ? : C($className . 'ID');
-	
+	$this->ID = is_numeric($this->ID) ? $this->ID : C($className . 'ID');
 	//HandlerID应该被设置好
-	if($this->ID()===null)
-	    DILog (get_called_class().'.ID wasn\'t set or configured, this handler won\'t be loaded.','w');
-	
+	if ($this->ID() === null)
+	{
+	    DILog(\get_called_class() . '.ID wasn\'t set or configured, this handler won\'t be loaded.', 'w');
+	}
 	//HandlerID必须是数字
-	if(is_numeric($this->ID()))
-	    DILog (get_called_class().'.ID isn\'t numeric, this handler won\'t be loaded.','w');
+	elseif (!is_numeric($this->ID()))
+	{
+	    DILog(\get_called_class() . '.ID isn\'t numeric, this handler won\'t be loaded.', 'w');
+	}else
+	{
+	    $this->server = $server;
+	}
     }
 
     public function ID()
@@ -35,6 +45,10 @@ abstract class Handler
 	return -1; //-1表示不指定处理Task
     }
 
+    /**
+     * 在执行Run函数之前执行。
+     * @param array $data
+     */
     public function __BeforeRun(&$data)
     {
 	//一般情况下可以把HandlerID和Size去掉
@@ -46,6 +60,10 @@ abstract class Handler
 	
     }
 
+    /**
+     * 在执行Run函数之后执行。
+     * @param array $data
+     */
     public function __AfterRun(&$data)
     {
 	

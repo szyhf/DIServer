@@ -49,7 +49,7 @@ class Build
 		    . "\n"
 		    . "namespace {$serverName}\Worker;\n"
 		    . "\n"
-		    . "use DIServer\BaseReloadHelper;\n"
+		    . "use DIServer\ReloadHelper;\n"
 		    . "/*\n"
 		    . " *WGServer的热重启助手类，可以自行覆写父类的方法（操作不当会导致框架无法正常运行，请仔细阅读父类的注释再修改）\n"
 		    . " */\n"
