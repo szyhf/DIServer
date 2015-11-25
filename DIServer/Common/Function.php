@@ -7,6 +7,8 @@
  */
 function DILog($msg, $level = "i")
 {
+    if ($level == 'n')
+	return;
     if (is_array($msg))
     {
 	foreach ($msg as $key => $value)
@@ -499,7 +501,7 @@ function DITicker($ticker = null)
     {
 	return $_tickers;
     }
-    elseif (is_subclass_of($ticker, "DIServer\BaseTicker"))
+    elseif (is_subclass_of($ticker, "DIServer\Ticker"))
     {
 	$_tickers[] = $ticker;
 	return TRUE;
@@ -529,12 +531,12 @@ function DILoadTicker($tickerFile, $namespace = '')
 	$className = $namespace . '\\' . $sortClassName;
 
 	require_cache($tickerFile);
-	$baseTickerClass = new \ReflectionClass("\DIServer\BaseTicker");
+	$TickerClass = new \ReflectionClass("\DIServer\Ticker");
 
 	try
 	{
 	    $tickerClass = new \ReflectionClass($className);
-	    if ($tickerClass->isSubclassOf($baseTickerClass))
+	    if ($tickerClass->isSubclassOf($TickerClass))
 	    {
 		$ticker = $tickerClass->newInstance();
 		DITicker($ticker);

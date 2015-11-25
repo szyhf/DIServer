@@ -97,7 +97,7 @@ class ReloadHelper
 	    $this->ReloadTicker();
 	    foreach (DITicker() as $ticker)
 	    {
-		/* @var $ticker \DIServer\BaseTicker */
+		/* @var $ticker \DIServer\Ticker */
 		$ticker->TryBind($server, $worker_id);
 	    }
 	}
@@ -201,10 +201,6 @@ class ReloadHelper
 	    $blackList = []; //未设置则初始话一个默认的空数组
 	}
 	
-	//重载DIServer/Handler
-	$handlerFiles = AllFile(DI_HANDLER_PATH, true, 'Handler.php');
-	DILoadHandler($handlerFiles, $whiteList, $blackList, '\DIServer\Handler', $server);
-
 	//重载Common/Handler
 	$handlerFiles = AllFile(DI_APP_COMMON_HANDLER_PATH, true, 'Handler.php');
 	DILoadHandler($handlerFiles, $whiteList, $blackList, '\Common\Handler', $server);
@@ -216,8 +212,6 @@ class ReloadHelper
 
     private function ReloadRequest()
     {
-	//重载DIServer/Request
-	AutoRequire(DI_REQUEST_PATH, true, 'Request.php');
 	//重载Common/Request
 	AutoRequire(DI_APP_COMMON_REQUEST_PATH, true, 'Request.php');
 	//重载Server/Request
@@ -226,9 +220,6 @@ class ReloadHelper
 
     private function ReloadTicker()
     {
-	//重载框架级的Ticker
-	$tickerFiles = AllFile(DI_TICKER_PATH, true, 'Ticker.php');
-	DILoadTicker($tickerFiles, "\DIServer\Ticker");
 	//重载Common级的Ticker
 	$tickerFiles = AllFile(DI_APP_COMMON_TICKER_PATH, true, 'Ticker.php');
 	DILoadTicker($tickerFiles, "\Common\Ticker");

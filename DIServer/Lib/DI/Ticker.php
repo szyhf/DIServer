@@ -1,7 +1,7 @@
 <?php
 
 namespace DIServer;
-use DIServer\BaseReloadHelper;
+use DIServer\ReloadHelper;
 /**
  * Worker定时器的基本模板
  * Ticker是运行在Worker进程的服务，请不要在此执行较复杂的业务逻辑
@@ -10,7 +10,7 @@ use DIServer\BaseReloadHelper;
  * 把Ticker看作一个闹钟就好
  * @author Back
  */
-class BaseTicker
+class Ticker
 {
     /**
      * 尝试绑定并激活定时器，请在子类自行实现绑定功能及绑定后的回调方法
