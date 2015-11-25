@@ -56,11 +56,11 @@ function DIHandler($idOrHandler = NULL)
 	    return [];
 	}
     }
-    elseif (is_subclass_of($idOrHandler, "DIServer\DIHandler"))
+    elseif (is_subclass_of($idOrHandler, "DIServer\Handler"))
     {
 	//需要添加处理器
 	//传入的处理器是合法的处理器	
-	/* @var $handler DIServer\DIHandler */
+	/* @var $handler DIServer\Handler */
 	$handler = $idOrHandler;
 	if (is_numeric($handler->ID()))
 	{
@@ -343,7 +343,7 @@ function DICallHandler($handlerID, \swoole_server &$server, array $handlerParams
     $handlers = DIHandler($handlerID);
     foreach ($handlers as $handlerKey => $handler)
     {
-	/* @var \DIServer\DIHandler $handler */
+	/* @var \DIServer\Handler $handler */
 	if (NULL !== $handler)
 	{
 	    $handlerParams['handlerID'] = $handlerID;
@@ -388,7 +388,7 @@ function DILoadHandler($handlerFile, $whiteList, $blackList, $namespace = '')
 	    return;
 	}
 	require_cache($handlerFile);
-	$DIHandlerClass = new \ReflectionClass("\DIServer\DIHandler");
+	$DIHandlerClass = new \ReflectionClass("\DIServer\Handler");
 	try
 	{
 

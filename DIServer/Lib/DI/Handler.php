@@ -7,7 +7,7 @@ namespace DIServer;
  *
  * @author Back
  */
-abstract class DIHandler
+abstract class Handler
 {
     public function __construct()
     {
