@@ -63,6 +63,7 @@ vi YourServer.php
 
 <?php
 \define('DI_SERVER_NAME', 'YourServer');
+\define('APP_PATH', './YourApplication/');
 //就酱，DIServer框架会自动创建目录
 require_once '{$DIServerPath}\DIServer.php';
 ```
