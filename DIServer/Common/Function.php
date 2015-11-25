@@ -21,7 +21,11 @@ function DILog($msg, $level = "i")
     }
     else
     {
-	echo date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . '] ' . $msg . "\n";
+	$msgs = explode("\n", $msg);
+	foreach ($msgs as $msg)
+	{
+	    echo date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . '] ' . $msg . "\n";
+	}
     }
 }
 
@@ -355,19 +359,20 @@ function DICallHandler($handlerID, \swoole_server &$server, array $handlerParams
 
 /**
  * 加载Handler文件
- * @param type $handlerFile Handler的文件
- * @param type $whiteList Handler的白名单
- * @param type $blackList Handler的黑名单
- * @param type $namespace Handler的命名空间
+ * @param string $handlerFile Handler的文件完整路径
+ * @param array $whiteList Handler的白名单
+ * @param array $blackList Handler的黑名单
+ * @param string $namespace Handler的命名空间
+ * @param \swoole_server $server 要注入到Handler中的当前进程的swoole_server对象
  * @return boolean 加载是否成功
  */
-function DILoadHandler($handlerFile, $whiteList, $blackList, $namespace = '')
+function DILoadHandler($handlerFile, $whiteList, $blackList, $namespace = '', \swoole_server &$server)
 {
     if (is_array($handlerFile))
     {
 	foreach ($handlerFile as $handlerFile)
 	{
-	    DILoadHandler($handlerFile, $whiteList, $blackList, $namespace);
+	    DILoadHandler($handlerFile, $whiteList, $blackList, $namespace, $server);
 	}
     }
     else if (file_exists($handlerFile))
@@ -395,7 +400,7 @@ function DILoadHandler($handlerFile, $whiteList, $blackList, $namespace = '')
 	    $handlerClass = new \ReflectionClass($className);
 	    if ($handlerClass->isSubclassOf($DIHandlerClass))
 	    {
-		$handler = $handlerClass->newInstance();
+		$handler = $handlerClass->newInstanceArgs(['server' => $server]);
 		DIHandler($handler);
 	    }
 	}
