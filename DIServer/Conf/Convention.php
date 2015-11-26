@@ -1,10 +1,7 @@
 <?php
 
 //惯例配置
-return [    
-    'DB_PING_INTERVAL' => 0, //是否定期跟数据库交流感情，为0表示不设置
-    'DB_PING_WORKER_NUM' => 0, //承担与数据库交流感情的Worker的ID
-    'USER_INFO_EX' => 128, //用户信息的保存时长
+return [
     'HANDLER_SLOW_CHECK' => 1, //一个Handler执行多长时间(秒）记为慢速Handler
     'SW_DI_SETTING_MAP' => //DIServer设置中与Swoole相关设置的映射
     [

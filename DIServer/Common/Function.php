@@ -90,7 +90,7 @@ function DIHandler($idOrHandler = NULL)
  * @param type $fd 0表示发送全局, uint表示发给指定fd，array(uint)表示发给数组中所有的fd
  * @return array result 发送失败的fd列表[index=>'$fd']（可能为空）;
  */
-function SendRequest(&$swoole, \DIServer\BaseRequest &$request, $fd = 0)
+function SendRequest(&$swoole, \DIServer\Request &$request, $fd = 0)
 {
     if ($fd === 0)
     {
@@ -120,10 +120,10 @@ function SendRequest(&$swoole, \DIServer\BaseRequest &$request, $fd = 0)
 /**
  * 
  * @param type $swoole
- * @param \DIServer\BaseRequest $request
+ * @param \DIServer\Request $request
  * @return array result 发送失败的fd列表[index=>'$fd'];
  */
-function SendPublicRequest(&$swoole, \DIServer\BaseRequest &$request)
+function SendPublicRequest(&$swoole, \DIServer\Request &$request)
 {
     return SendPublicMessage($swoole, $request->ToPackage());
 }
