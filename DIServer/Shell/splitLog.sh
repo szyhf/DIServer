@@ -3,6 +3,7 @@
 #将拆分后的日志中的info行和error行单独提取保存
 #本脚本应放在../APP_PATH/Shell目录下执行，否则不保证其可用性
 #作者：Back 首发日期：20150917
+#作者：Back 更新日期：20151120 注释了生成error、info单独日志的语句（可以根据需要自己启用）
 #
 appDirPath=$(cd `dirname $0`; pwd)"/../"
 fileList=`ls $appDirPath|grep Server$`
