@@ -203,30 +203,30 @@ abstract class Driver
 	if (!$this->_linkID)
 	    return false;
 
+
+	$this->queryStr = $str;
+	if (!empty($this->bind))
+	{
+	    $that = $this;
+	    $this->queryStr = strtr($this->queryStr, array_map(function($val) use($that)
+		    {
+			return '\'' . $that->escapeString($val) . '\'';
+		    }, $this->bind));
+	}
+	if ($fetchSql)
+	{
+	    return $this->queryStr;
+	}
 	for ($i = 0; $i <= C('DB_RECONNECT_TIMES'); $i++)
 	{
 	    //第一次循环中尝试执行Sql语句，如果成功则跳出循环
 	    //如果由于连接断开失败，则重置连接，并进入第二次循环
-	    //如果还是失败就完蛋了。
-	    $this->queryStr = $str;
-	    if (!empty($this->bind))
-	    {
-		$that = $this;
-		$this->queryStr = strtr($this->queryStr, array_map(function($val) use($that)
-			{
-			    return '\'' . $that->escapeString($val) . '\'';
-			}, $this->bind));
-	    }
-	    if ($fetchSql)
-	    {
-		return $this->queryStr;
-	    }
+	    //直到超出重试次数
 	    //释放前次的查询结果
 	    if (!empty($this->PDOStatement))
 	    {
 		$this->free();
 	    }
-	    $this->queryTimes++;
 	    N('db_query', 1); // 兼容代码
 	    // 调试开始
 	    $this->debug(true);
@@ -248,11 +248,13 @@ abstract class Driver
 		    $this->PDOStatement->bindValue($key, $val);
 		}
 	    }
-	    $this->bind = array();
 	    $result = FALSE;
 	    try
 	    {
 		$result = $this->PDOStatement->execute();
+		$this->queryTimes++;
+		$this->bind = array();
+		break;//如果执行没有发生异常，则跳出重试循环。
 	    }
 	    catch (\PDOException $ex)
 	    {
@@ -294,28 +296,27 @@ abstract class Driver
 	$this->initConnect(true);
 	if (!$this->_linkID)
 	    return false;
+	$this->queryStr = $str;
+	if (!empty($this->bind))
+	{
+	    $that = $this;
+	    $this->queryStr = strtr($this->queryStr, array_map(function($val) use($that)
+		    {
+			return '\'' . $that->escapeString($val) . '\'';
+		    }, $this->bind));
+	}
+	if ($fetchSql)
+	{
+	    return $this->queryStr;
+	}
 	for ($i = 0; $i <= C('DB_RECONNECT_TIMES'); $i++)
 	{
 	    //第一次循环中尝试执行Sql语句，如果成功则跳出循环
 	    //如果由于连接断开失败，则重置连接，并进入第二次循环
-	    //如果还是失败就完蛋了。
-	    $this->queryStr = $str;
-	    if (!empty($this->bind))
-	    {
-		$that = $this;
-		$this->queryStr = strtr($this->queryStr, array_map(function($val) use($that)
-			{
-			    return '\'' . $that->escapeString($val) . '\'';
-			}, $this->bind));
-	    }
-	    if ($fetchSql)
-	    {
-		return $this->queryStr;
-	    }
+	    //直到超出重试次数
 	    //释放前次的查询结果
 	    if (!empty($this->PDOStatement))
 		$this->free();
-	    $this->executeTimes++;
 	    N('db_write', 1); // 兼容代码
 	    // 记录开始执行时间
 	    $this->debug(true);
@@ -336,11 +337,13 @@ abstract class Driver
 		    $this->PDOStatement->bindValue($key, $val);
 		}
 	    }
-	    $this->bind = array();
 	    $result = FALSE;
 	    try
 	    {
 		$result = $this->PDOStatement->execute();
+		$this->executeTimes++; //执行成功了再统计为查询次数
+		$this->bind = array(); //确定本次执行成功了再清空bind
+		break; //如果执行没有异常，则跳出重试循环。
 	    }
 	    catch (\PDOException $ex)
 	    {
@@ -353,7 +356,7 @@ abstract class Driver
 		    }
 		    sleep(C('DB_RECONNECT_WAIT'));
 		    $this->_linkID = $this->forceReConnect();
-		    continue; //重试
+		    continue; //因为断线产生异常，进入重试循环。
 		}
 	    }
 	}
