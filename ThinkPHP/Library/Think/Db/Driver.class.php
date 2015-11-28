@@ -234,8 +234,13 @@ abstract class Driver
 	    $this->PDOStatement = $this->_linkID->prepare($str);
 	    if (false === $this->PDOStatement)
 	    {
-		$this->error();
-		return false;
+		if (IS_CLI && APP_DEBUG)
+		{
+		    DILog("PDOStatement has gone and try reconnect\n");
+		}
+		sleep(C('DB_RECONNECT_WAIT'));
+		$this->_linkID = $this->forceReConnect();
+		continue; //重试
 	    }
 	    foreach ($this->bind as $key => $val)
 	    {
@@ -254,7 +259,7 @@ abstract class Driver
 		$result = $this->PDOStatement->execute();
 		$this->queryTimes++;
 		$this->bind = array();
-		break;//如果执行没有发生异常，则跳出重试循环。
+		break; //如果执行没有发生异常，则跳出重试循环。
 	    }
 	    catch (\PDOException $ex)
 	    {
@@ -323,8 +328,13 @@ abstract class Driver
 	    $this->PDOStatement = $this->_linkID->prepare($str);
 	    if (false === $this->PDOStatement)
 	    {
-		$this->error();
-		return false;
+		if (IS_CLI && APP_DEBUG)
+		{
+		    DILog("PDOStatement has gone and try reconnect\n");
+		}
+		sleep(C('DB_RECONNECT_WAIT'));
+		$this->_linkID = $this->forceReConnect();
+		continue; //重试
 	    }
 	    foreach ($this->bind as $key => $val)
 	    {
@@ -494,7 +504,7 @@ abstract class Driver
 	}
 	else
 	{
-	    $this->error = '';
+	    $this->error = 'PDOStatement is null or false';
 	}
 	if ('' != $this->queryStr)
 	{
