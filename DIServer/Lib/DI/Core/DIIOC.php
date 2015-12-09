@@ -1,15 +1,9 @@
 <?php
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace DIServer;
 
 /**
  * Description of DIIOC
+ * 参考了Laravel的IOC容器、MvvmLight的IOC结合自己的理解开发。
  *
  * @author Back
  */
@@ -95,15 +89,8 @@ class DIIOC
 	}
 	else
 	{
-	    //整合依赖项与自定义参数
-	    $parameters = $this->keyParametersByArgument(
-		    $dependencies, $parameters
-	    );
-
 	    //构造依赖项实例（包括已经由用户提供的）
-	    $instances = $this->getDependencies(
-		    $dependencies, $parameters
-	    );
+	    $instances = $this->getFunctionDependencies($functionRef, $parameters);
 
 	    $res = $functionRef->invokeArgs($instances);
 	}
@@ -131,13 +118,8 @@ class DIIOC
 	}
 	else
 	{
-	    //整合依赖项与自定义参数
-	    $parameters = $this->keyParametersByArgument(
-		    $dependencies, $parameters
-	    );
-
 	    //构造整合依赖项实例（包括已经由用户提供的）
-	    $instances = $this->getDependencies(
+	    $instances = $this->getFunctionDependencies(
 		    $dependencies, $parameters
 	    );
 	    
