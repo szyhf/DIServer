@@ -1,4 +1,5 @@
 <?php
+
 namespace DIServer;
 
 /**
@@ -9,6 +10,63 @@ namespace DIServer;
  */
 class DIIOC
 {
+
+    /**
+     * 获取实例
+     *
+     * @param  string  $abstract
+     * @param  array   $parameters
+     * @return mixed
+     */
+    public function make($abstract, array $parameters = [])
+    {
+	$abstract = $this->getAlias($this->normalize($abstract));
+
+	// If an instance of the type is currently being managed as a singleton we'll
+	// just return an existing instance instead of instantiating new instances
+	// so the developer can keep using the same objects instance every time.
+	if (isset($this->instances[$abstract]))
+	{
+	    return $this->instances[$abstract];
+	}
+
+	$concrete = $this->getConcrete($abstract);
+
+	// We're ready to instantiate an instance of the concrete type registered for
+	// the binding. This will instantiate the types, as well as resolve any of
+	// its "nested" dependencies recursively until all have gotten resolved.
+	if ($this->isBuildable($concrete, $abstract))
+	{
+	    $object = $this->build($concrete, $parameters);
+	}
+	else
+	{
+	    $object = $this->make($concrete, $parameters);
+	}
+
+	// If we defined any extenders for this type, we'll need to spin through them
+	// and apply them to the object being built. This allows for the extension
+	// of services, such as changing configuration or decorating the object.
+	foreach ($this->getExtenders($abstract) as $extender)
+	{
+	    $object = $extender($object, $this);
+	}
+
+	// If the requested type is registered as a singleton we'll want to cache off
+	// the instances in "memory" so we can return it later without creating an
+	// entirely new instance of an object on each subsequent request for it.
+	if ($this->isShared($abstract))
+	{
+	    $this->instances[$abstract] = $object;
+	}
+
+	$this->fireResolvingCallbacks($abstract, $object);
+
+	$this->resolved[$abstract] = true;
+
+	return $object;
+    }
+
     /**
      * 通过匿名工厂函数构造一个对象实例
      * 若工厂函数需要使用参数，会优先选用传入的自定义参数数组
@@ -46,6 +104,7 @@ class DIIOC
      */
     protected function buildWithClass(string $className, array $parameters = [])
     {
+	dump($className);
 	//构造类反射对象
 	$classReflector = new \ReflectionClass($className);
 
@@ -58,12 +117,20 @@ class DIIOC
 
 	//获取类的构造函数的方法反射类	 
 	$constructorMetodReflector = $classReflector->getConstructor();
-	
-	//获取这个构造函数的所有参数的依赖项实例
-	$constructorDependences = $this->getFunctionDependencies($constructorMetodReflector);
 
-	//根据参数的依赖项实例完成实例化
-	return $classReflector->newInstanceArgs($constructorDependences);
+	if ($constructorMetodReflector)
+	{
+	    //如果构造函数存在
+	    //获取这个构造函数的所有参数的依赖项实例
+	    $constructorDependences = $this->getFunctionDependencies($constructorMetodReflector);
+	    //根据参数的依赖项实例完成实例化
+	    return $classReflector->newInstanceArgs($constructorDependences);
+	}
+	else
+	{
+	    //构造函数不存在，直接实例化。
+	    return $classReflector->newInstanceWithoutConstructor();
+	}
     }
 
     /**
@@ -105,7 +172,7 @@ class DIIOC
      * @param array $parameters （可选）自定义提供的参数-实例列表['$paramName'=>'$instance']
      * @return mixed 方法的返回值
      */
-    protected function callMethod(object $instance,\ReflectionMethod $methodRef, array $parameters = [])
+    protected function callMethod(object $instance, \ReflectionMethod $methodRef, array $parameters = [])
     {
 	$res = null;
 	$this->buildStack[] = $methodRef; //记录
@@ -122,13 +189,13 @@ class DIIOC
 	    $instances = $this->getFunctionDependencies(
 		    $dependencies, $parameters
 	    );
-	    
-	    $res = $methodRef->invokeArgs($instance,$instances);
+
+	    $res = $methodRef->invokeArgs($instance, $instances);
 	}
 	array_pop($this->buildStack); //销毁记录
 	return $res;
     }
-    
+
     /**
      * 获取一个函数方法或者成员方法的依赖项参数实例集合
      * 若方法需要使用参数，会优先选用传入的自定义参数数组
@@ -156,7 +223,7 @@ class DIIOC
 	    $instances = $this->getDependencies(
 		    $dependencies, $parameters
 	    );
-	    
+
 	    return $instances;
 	}
     }
@@ -249,7 +316,7 @@ class DIIOC
 	    return $this->make($parameter->getClass()->name);
 	}
 	catch (\Exception $e)
-	{	    
+	{
 	    //先尝试直接从容器获取对应实例
 	    //如果没有再考虑该参数的默认值
 	    //要不就挂了
@@ -260,4 +327,5 @@ class DIIOC
 	    throw $e;
 	}
     }
+
 }
