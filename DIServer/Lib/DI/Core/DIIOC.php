@@ -11,61 +11,122 @@ namespace DIServer;
  */
 class DIIOC
 {
+    protected $instances = [];
+    protected $aliases = [];
+    protected $factorys = [];
+    protected $bindings = [];
+    protected $buildStack = [];
+    protected $resolved = [];
+    protected $keyInstances = [];
 
     /**
-     * 获取实例
-     *
-     * @param  string  $abstract
-     * @param  array   $parameters
+     * 尝试获得指定接口\类型\别名的实例
+     * @param string $type 类型或者接口的全称（包括命名空间）|别名
+     * @param array $parameters
      * @return mixed
      */
-    public function make($abstract, array $parameters = [])
+    protected function GetInstance(string $type, string $key = NULL, array $parameters = [])
     {
-	$abstract = $this->getAlias($this->normalize($abstract));
+	$type = $this->GetTypeByAlias($this->normalize($type));
 
-	// If an instance of the type is currently being managed as a singleton we'll
-	// just return an existing instance instead of instantiating new instances
-	// so the developer can keep using the same objects instance every time.
-	if (isset($this->instances[$abstract]))
+	if (empty($key))
 	{
-	    return $this->instances[$abstract];
-	}
-
-	$concrete = $this->getConcrete($abstract);
-
-	// We're ready to instantiate an instance of the concrete type registered for
-	// the binding. This will instantiate the types, as well as resolve any of
-	// its "nested" dependencies recursively until all have gotten resolved.
-	if ($this->isBuildable($concrete, $abstract))
-	{
-	    $object = $this->build($concrete, $parameters);
+	    //直接尝试从实例化后的列表获取全局唯一实例
+	    if (isset($this->instances[$type]))
+	    {
+		$instance = $this->instances[$type];
+	    }
+	    else
+	    {
+		$instance = $this->makeInstance($type, $parameters);
+	    }
 	}
 	else
 	{
-	    $object = $this->make($concrete, $parameters);
+	    throw new Exception('not support multi-instance now.');
 	}
 
-	// If we defined any extenders for this type, we'll need to spin through them
-	// and apply them to the object being built. This allows for the extension
-	// of services, such as changing configuration or decorating the object.
-	foreach ($this->getExtenders($abstract) as $extender)
+	$this->instances[$type] = $instance;
+	//将该类型\接口\别名记录为已解决。
+	$this->resolved[$type] = true;
+
+	return $instance;
+    }
+
+    /**
+     * 根据类型完成实例化
+     * @param string $type 类型全称\接口全称\抽象类全称
+     * @param array $parameters （可选）构造函数的参数
+     */
+    protected function makeInstance(string $type, array $parameters = [])
+    {
+	$instance = NULL;
+
+	//实时构造
+	if (isset($this->bindings[$type]))
 	{
-	    $object = $extender($object, $this);
+	    //检查指定映射（如接口->...->类，抽象类->...->类，类->...->子类）
+	    $target = $this->bindings[$type];
+	    //递归直到实现
+	    $instance = $this->GetInstance($target,null, $parameters);
 	}
-
-	// If the requested type is registered as a singleton we'll want to cache off
-	// the instances in "memory" so we can return it later without creating an
-	// entirely new instance of an object on each subsequent request for it.
-	if ($this->isShared($abstract))
+	elseif (isset($this->factorys[$type]))
 	{
-	    $this->instances[$abstract] = $object;
+	    //尝试使用工厂方法生成
+	    $closureFactory = $this->factorys[$type];
+	    $instance = $this->buildWithClosure($closureFactory, $parameters);
 	}
+	elseif (class_exists($type))
+	{
+	    //尝试使用构造函数生成
+	    $instance = $this->buildWithClass($type, $parameters);
+	}
+	else
+	{
+	    throw new Exception('makeInstance failed.');
+	}
+	return $instance;
+    }
 
-	$this->fireResolvingCallbacks($abstract, $object);
+    /**
+     * 完成多实例模式的实例化
+     * @param string $type 类型全称\接口全称\抽象类全称
+     * @param string $key 实例别名
+     * @param array $parameters
+     */
+    protected function makeInstanceByKey(string $type, string $key, array $parameters = [])
+    {
+	
+    }
 
-	$this->resolved[$abstract] = true;
+    /**
+     * 根据别名获取原名
+     * @param string $alias 别名
+     * @return string
+     */
+    protected function GetTypeByAlias(string $alias)
+    {
+	return isset($this->aliases[$alias]) ? $this->aliases[$alias] : $alias;
+    }
 
-	return $object;
+    /**
+     * 某个类型是否已经被实例化
+     * @param string $type 类型全称\接口全称\抽象类全称
+     * @return bool
+     */
+    protected function IsImplemented(string $type)
+    {
+	return (bool)$this->resolved[$type];
+    }
+    
+    /**
+     * 
+     * @param type $type
+     * @return mixed
+     */
+    protected function normalize($type)
+    {
+	return is_string($type) ? trim($type, '\\') : $type;
     }
 
     /**
@@ -105,7 +166,7 @@ class DIIOC
      */
     protected function buildWithClass(string $className, array $parameters = [])
     {
-	dump($className);
+	$this->bulidStack[] = $className;
 	//构造类反射对象
 	$classReflector = new \ReflectionClass($className);
 
@@ -121,17 +182,19 @@ class DIIOC
 
 	if ($constructorMetodReflector)
 	{
-	    //如果构造函数存在
-	    //获取这个构造函数的所有参数的依赖项实例
+	    //如果构造函数存在，获取这个构造函数的所有参数的依赖项实例并实例化
 	    $constructorDependences = $this->getFunctionDependencies($constructorMetodReflector);
+
 	    //根据参数的依赖项实例完成实例化
-	    return $classReflector->newInstanceArgs($constructorDependences);
+	    $object = $classReflector->newInstanceArgs($constructorDependences);
 	}
 	else
 	{
 	    //构造函数不存在，直接实例化。
-	    return $classReflector->newInstanceWithoutConstructor();
+	    $object = $classReflector->newInstanceWithoutConstructor();
 	}
+	array_pop($this->bulidStack[]);
+	return $object;
     }
 
     /**
@@ -147,7 +210,6 @@ class DIIOC
     protected function callFunction(\ReflectionFunction $functionRef, array $parameters = [])
     {
 	$res = null;
-	$this->buildStack[] = $functionRef; //记录
 
 	$dependencies = $functionRef->getParameters();
 	if (empty($dependencies))
@@ -162,7 +224,7 @@ class DIIOC
 
 	    $res = $functionRef->invokeArgs($instances);
 	}
-	array_pop($this->buildStack); //销毁记录
+
 	return $res;
     }
 
@@ -176,7 +238,6 @@ class DIIOC
     protected function callMethod(object $instance, \ReflectionMethod $methodRef, array $parameters = [])
     {
 	$res = null;
-	$this->buildStack[] = $methodRef; //记录
 
 	$dependencies = $methodRef->getParameters();
 	if (empty($dependencies))
@@ -193,7 +254,6 @@ class DIIOC
 
 	    $res = $methodRef->invokeArgs($instance, $instances);
 	}
-	array_pop($this->buildStack); //销毁记录
 	return $res;
     }
 
@@ -314,7 +374,7 @@ class DIIOC
     {
 	try
 	{
-	    return $this->make($parameter->getClass()->name);
+	    return $this->GetInstance($parameter->getClass()->name);
 	}
 	catch (\Exception $e)
 	{
@@ -329,4 +389,15 @@ class DIIOC
 	}
     }
 
+    /**
+     * 工厂函数是否可以用于实例化该类型
+     *
+     * @param  mixed   $concrete
+     * @param  string  $abstract
+     * @return bool
+     */
+    protected function isBuildable(\Closure $factory, $type)
+    {
+	return $concrete === $type || $concrete instanceof \Closure;
+    }
 }
