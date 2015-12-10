@@ -3,9 +3,10 @@
 namespace DIServer;
 
 /**
- * Description of DIIOC
+ * IOC工具
  * 参考了Laravel的IOC容器、MvvmLight的IOC结合自己的理解开发。
- *
+ * 异常还没整理
+ * 命名还没规范化（调试环境有些函数不方便设置为public）
  * @author Back
  */
 class DIIOC
