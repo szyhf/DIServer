@@ -1,8 +1,7 @@
 <?php
 
-namespace \DIServer\Lib\DI\DIContainer;
+namespace DIServer\Lib\DI\DIContainer;
 
-use DIServer\Lib\DI\DIContainer\Exception\DIContainerException;
 use DIServer\Lib\DI\DIContainer\Exception\DependenceCycleException;
 use DIServer\Lib\DI\DIContainer\Exception\MakeFailedException;
 use DIServer\Lib\DI\DIContainer\Exception\NotExistException;
@@ -108,7 +107,7 @@ class DIContainer
      * @param array $constructorParams
      * @param string $key
      */
-    public function Register(string $type, $auto = null, string $key = null
+    public function Register($type, $auto = null, $key = null
     , array $constructorParams = [])
     {
 	if ($this->isAbstract($type))
@@ -166,8 +165,7 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\ClassNotExistException
      * @throws \DIServer\Lib\DI\DIContainer\Exception\RegistedException
      */
-    public function RegisterClass(string $class, array $constructorParams = []
-    , string $key = null)
+    public function RegisterClass($class, array $constructorParams = [], $key = null)
     {
 	$class = $this->normalizeType($class);
 	if (!class_exists($class))
@@ -195,8 +193,8 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\ClassNotExistException
      * @throws \DIServer\Lib\DI\DIContainer\Exception\RegistedException
      */
-    public function RegisterClassByFactory(string $class, \Closure $factory
-    , array $factoryParams = [], string $key = null)
+    public function RegisterClassByFactory($class, \Closure $factory
+    , array $factoryParams = [], $key = null)
     {
 	$key = $this->normalizeKey($key);
 	$class = $this->normalizeType($class);
@@ -213,17 +211,18 @@ class DIContainer
      * @param string $key （可选）多例模式下的key
      * @throws \DIServer\Lib\DI\DIContainer\Exception\NotTypeOfInstanceException
      */
-    public function RegisterClassByInstance(string $class, object $instance
-    , string $key = null)
+    public function RegisterClassByInstance($class, $instance, $key = null)
     {
 	$class = $this->normalizeType($class);
 	$key = $this->normalizeKey($key);
 
 	$this->RegisterClass($class, [], $key);
-	if ($instance instanceof $class)
+
+	if (is_a($instance, $class))
 	{
 	    $key = $this->normalizeKey($key);
 	    $this->instances[$class][$key] = $instance;
+	    $this->implemented[$class][$key] = TRUE;
 	}
 	else
 	{
@@ -240,8 +239,8 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\NotExistException
      * @throws \DIServer\Lib\DI\DIContainer\Exception\RegistedException
      */
-    public function RegisterInterfaceByClass(string $interface, string $class
-    , string $key = null, string $classKey = NULL)
+    public function RegisterInterfaceByClass($interface, $class
+    , $key = null, $classKey = NULL)
     {
 	if ($this->isAbstract($interface))
 	{
@@ -273,8 +272,8 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\NotExistException
      * @throws \DIServer\Lib\DI\DIContainer\Exception\RegistedException
      */
-    public function RegisterInterfaceByFactory(string $interface
-    , \Closure $factory, array $factoryParams = [], string $key = null)
+    public function RegisterInterfaceByFactory($interface
+    , \Closure $factory, array $factoryParams = [], $key = null)
     {
 	if ($this->isAbstract($interface))
 	{
@@ -304,7 +303,7 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\RegistedException
      * @throws \DIServer\Lib\DI\DIContainer\Exception\NotTypeOfInstanceException
      */
-    public function RegisterInterfaceByInstance(string $interface, object $instance, string $key = null)
+    public function RegisterInterfaceByInstance($interface, $instance, $key = null)
     {
 	if ($this->isAbstract($interface))
 	{
@@ -314,7 +313,8 @@ class DIContainer
 	{
 	    throw new RegistedException($interface, $key);
 	}
-	elseif (!($instance instanceof $interface))
+
+	if (!($instance instanceof $interface))
 	{
 	    throw new NotTypeOfInstanceException($interface, $key);
 	}
@@ -352,7 +352,7 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\MakeFailedException
      * @return mixed
      */
-    public function GetInstance(string $type, string $key = null)
+    public function GetInstance($type, $key = null)
     {
 	$type = $this->normalizeType($type);
 	$key = $this->normalizeKey($key);
@@ -382,7 +382,7 @@ class DIContainer
      * @param string $type 类型或者接口的全称（包括命名空间）
      * @return array 所有实例的集合
      */
-    public function GetAllImplementedInstances(string $type)
+    public function GetAllImplementedInstances($type)
     {
 	$type = $this->normalizeType($type);
 
@@ -402,7 +402,7 @@ class DIContainer
      * 尝试获得指定接口\类型的所有实例
      * @param string $type 类或接口的全称
      */
-    public function GetAllInstances(string $type)
+    public function GetAllInstances($type)
     {
 	$type = $this->normalizeType($type);
 
@@ -423,7 +423,7 @@ class DIContainer
      * @param string $class 类全名
      * @param array $params
      */
-    protected function registerSelfParams(string $class, array $params = [], $key = null)
+    protected function registerSelfParams($class, array $params = [], $key = null)
     {
 	if (count($params))
 	{
@@ -441,7 +441,7 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\DependenceCycleException
      * @throws \DIServer\Lib\DI\DIContainer\Exception\MakeFailedException
      */
-    protected function makeInstance(string $type, array $parameters = [], $key = null)
+    protected function makeInstance($type, array $parameters = [], $key = null)
     {
 	if (in_array($type . '[' . $key . ']', $this->buildStack))
 	    throw new DependenceCycleException($this->buildStack);
@@ -480,7 +480,7 @@ class DIContainer
      * @param string $type 类型\接口全名
      * @return bool
      */
-    public function HasImplemented(string $type)
+    public function HasImplemented($type)
     {
 	return isset($this->implemented[$type]);
     }
@@ -490,7 +490,7 @@ class DIContainer
      * @param string $type 类型\接口全名
      * @return bool
      */
-    public function HasRegisterer(string $type)
+    public function HasRegisterer($type)
     {
 	return isset($this->registries[$type]);
     }
@@ -501,7 +501,7 @@ class DIContainer
      * @param string $key （可选）多例模式下的Key
      * @return type
      */
-    public function IsRegistered(string $type, string $key = null)
+    public function IsRegistered($type, $key = null)
     {
 	$key = $this->normalizeKey($key);
 	return isset($this->registries[$type][$key]);
@@ -513,10 +513,10 @@ class DIContainer
      * @param string $key （可选）多例模式下的key
      * @return bool
      */
-    protected function IsImplemented(string $type, string $key = null)
+    protected function IsImplemented($type, $key = null)
     {
 	$key = $this->normalizeKey($key);
-	return (bool) $this->implemented[$type][$key];
+	return isset($this->implemented[$type][$key]);
     }
 
     /**
@@ -534,7 +534,7 @@ class DIContainer
      * @param string $key
      * @return string
      */
-    protected function normalizeKey(string $key = null)
+    protected function normalizeKey($key = null)
     {
 	return $key? : $this->defaultKey;
     }
@@ -571,7 +571,7 @@ class DIContainer
      * 
      * @throws Exception
      */
-    protected function buildWithClass(string $className, array $parameters = [])
+    protected function buildWithClass($className, array $parameters = [])
     {
 	//构造类反射对象
 	$classReflector = new \ReflectionClass($className);
@@ -809,7 +809,7 @@ class DIContainer
      * @param string $abstract
      * @return boolean
      */
-    protected function isAbstract(string $abstract)
+    protected function isAbstract($abstract)
     {
 	if (!interface_exists($abstract))
 	{
