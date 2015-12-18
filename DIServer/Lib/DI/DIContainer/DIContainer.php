@@ -93,11 +93,11 @@ class DIContainer
      */
     public static function Container()
     {
-//	if (!self::$defaultIOC)
+	if (!self::$defaultIOC)
 	{
-	    self::$defaultIOC = new DIContainer();
+	    static::$defaultIOC = new DIContainer();
 	}
-	return self::$defaultIOC;
+	return static::$defaultIOC;
     }
 
     /**
