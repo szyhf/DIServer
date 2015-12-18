@@ -1,5 +1,4 @@
 <?php
-
 namespace DIServer\Lib\DI\DIContainer\Exception;
 
 /**

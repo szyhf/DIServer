@@ -1,8 +1,15 @@
 <?php
 
-namespace \DIServer\Lib\DI\Core\DIContainer;
+namespace \DIServer\Lib\DI\DIContainer;
 
-use \DIServer\Lib\DI\DIContainer\Exception;
+use DIServer\Lib\DI\DIContainer\Exception\DIContainerException;
+use DIServer\Lib\DI\DIContainer\Exception\DependenceCycleException;
+use DIServer\Lib\DI\DIContainer\Exception\MakeFailedException;
+use DIServer\Lib\DI\DIContainer\Exception\NotExistException;
+use DIServer\Lib\DI\DIContainer\Exception\NotRegistedException;
+use DIServer\Lib\DI\DIContainer\Exception\NotTypeOfInstanceException;
+use DIServer\Lib\DI\DIContainer\Exception\RegistedException;
+use DIServer\Lib\DI\DIContainer\Exception\UnresolvableParameterException;
 
 /**
  * IOC容器类
@@ -93,7 +100,64 @@ class DIContainer
 	}
 	return self::$defaultIOC;
     }
-    
+
+    /**
+     * 自动注册
+     * @param string $type
+     * @param string|\Closure|object|array $auto
+     * @param array $constructorParams
+     * @param string $key
+     */
+    public function Register(string $type, $auto = null, string $key = null
+    , array $constructorParams = [])
+    {
+	if ($this->isAbstract($type))
+	{
+	    //接口相关
+	    if (is_string($auto))
+	    {
+		//把类型注册给接口
+		$this->RegisterInterfaceByClass($type, $auto, $key);
+	    }
+	    elseif (is_array($auto))
+	    {
+		//把指定多例模式下的指定实例注册给接口
+		//要求$auto = ['$class'=>'$key']
+		list($class, $classKey) = each($auto);
+		$this->RegisterInterfaceByClass($type, $class, $key, $classKey);
+	    }
+	    elseif ($auto instanceof \Closure)
+	    {
+		//提供了工厂方法
+		$this->RegisterInterfaceByFactory($key, $auto, $constructorParams, $key);
+	    }
+	    else
+	    {
+		//当作提供的实例
+		$this->RegisterInterfaceByInstance($type, $auto, $key);
+	    }
+	}
+	elseif (class_exists($type))
+	{
+	    //类相关
+	    if ($auto instanceof \Closure)
+	    {
+		//提供了工厂方法
+		$this->RegisterClassByFactory($type, $auto, $constructorParams, $key);
+	    }
+	    elseif (isset($auto))
+	    {
+		//当作提供提供了实例
+		$this->RegisterClassByInstance($type, $auto, $key);
+	    }
+	    else
+	    {
+		//使用默认构造函数
+		$this->RegisterClass($type, $constructorParams, $key);
+	    }
+	}
+    }
+
     /**
      * 注册一个类型
      * @param string $class 类全名（请勿使用抽象类）
@@ -108,11 +172,11 @@ class DIContainer
 	$class = $this->normalizeType($class);
 	if (!class_exists($class))
 	{
-	    throw new DIContainer\ClassNotExistException($class, $key);
+	    throw new NotExistException($class, $key);
 	}
 	elseif ($this->IsRegistered($class, $key))
 	{
-	    throw new DIContainer\RegistedException($class, $key);
+	    throw new RegistedException($class, $key);
 	}
 	else
 	{
@@ -163,7 +227,7 @@ class DIContainer
 	}
 	else
 	{
-	    throw new DIContainer\NotTypeOfInstanceException($class, $key);
+	    throw new NotTypeOfInstanceException($class, $key);
 	}
     }
 
@@ -181,11 +245,11 @@ class DIContainer
     {
 	if ($this->isAbstract($interface))
 	{
-	    throw new DIContainer\NotExistException($interface, $key);
+	    throw new NotExistException($interface, $key);
 	}
 	elseif ($this->IsRegistered($interface, $key))
 	{
-	    throw new DIContainer\RegistedException($interface, $key);
+	    throw new RegistedException($interface, $key);
 	}
 	else
 	{
@@ -214,11 +278,11 @@ class DIContainer
     {
 	if ($this->isAbstract($interface))
 	{
-	    throw new DIContainer\NotExistException($interface, $key);
+	    throw new NotExistException($interface, $key);
 	}
 	elseif ($this->IsRegistered($interface, $key))
 	{
-	    throw new DIContainer\RegistedException($interface, $key);
+	    throw new RegistedException($interface, $key);
 	}
 	else
 	{
@@ -244,15 +308,15 @@ class DIContainer
     {
 	if ($this->isAbstract($interface))
 	{
-	    throw new DIContainer\NotExistException($interface, $key);
+	    throw new NotExistException($interface, $key);
 	}
 	elseif ($this->IsRegistered($interface, $key))
 	{
-	    throw new DIContainer\RegistedException($interface, $key);
+	    throw new RegistedException($interface, $key);
 	}
 	elseif (!($instance instanceof $interface))
 	{
-	    throw new DIContainer\NotTypeOfInstanceException($interface, $key);
+	    throw new NotTypeOfInstanceException($interface, $key);
 	}
 	else
 	{
@@ -295,7 +359,7 @@ class DIContainer
 
 	if (!$this->IsRegistered($type, $key))
 	{
-	    throw new DIContainer\NotRegistedException($type, $key);
+	    throw new NotRegistedException($type, $key);
 	}
 
 	if ($this->IsImplemented($type, $key))
@@ -380,7 +444,7 @@ class DIContainer
     protected function makeInstance(string $type, array $parameters = [], $key = null)
     {
 	if (in_array($type . '[' . $key . ']', $this->buildStack))
-	    throw new Exception\DependenceCycleException($this->buildStack);
+	    throw new DependenceCycleException($this->buildStack);
 	$this->buildStack[] = $type . '[' . $key . ']';
 	//实时构造
 	if (isset($this->interfaces[$type][$key]))
@@ -405,7 +469,7 @@ class DIContainer
 	}
 	else
 	{
-	    throw new DIContainer\MakeFailedException($type);
+	    throw new MakeFailedException($type);
 	}
 	array_pop($this->buildStack);
 	return $instance;
@@ -515,8 +579,7 @@ class DIContainer
 	//如果是抽象类或者接口，则无法实例化（异常）
 	if (!$classReflector->isInstantiable())
 	{
-	    $message = "Target $className is not instantiable.";
-	    throw new Exception($message);
+	    throw new MakeFailedException($className);
 	}
 
 	//获取类的构造函数的方法反射类	 
@@ -699,7 +762,7 @@ class DIContainer
 	}
 	else
 	{
-	    throw new Exception\UnresolvableParameterException($parameter);
+	    throw new UnresolvableParameterException($parameter);
 	}
     }
 
@@ -725,7 +788,7 @@ class DIContainer
 	    {
 		return $parameter->getDefaultValue();
 	    }
-	    throw new Exception\UnresolvableParameterException($parameter);
+	    throw new UnresolvableParameterException($parameter);
 	}
     }
 
