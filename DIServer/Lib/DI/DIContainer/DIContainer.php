@@ -13,7 +13,7 @@ use DIServer\Lib\DI\DIContainer\Exception\UnresolvableParameterException;
 /**
  * IOC容器类
  */
-class DIContainer
+class DIContainer implements \ArrayAccess
 {
 
     /**
@@ -100,6 +100,11 @@ class DIContainer
 	return static::$defaultIOC;
     }
 
+    protected function __construct()
+    {
+	$this[__CLASS__]=$this;
+    }
+
     /**
      * 自动注册
      * @param string $type
@@ -107,8 +112,7 @@ class DIContainer
      * @param array $constructorParams
      * @param string $key
      */
-    public function Register($type, $auto = null, $key = null
-    , array $constructorParams = [])
+    public function Register($type, $auto = null, $key = null, array $constructorParams = [])
     {
 	if ($this->isAbstract($type))
 	{
@@ -329,6 +333,35 @@ class DIContainer
     }
 
     /**
+     * 注销
+     * @param type $type
+     * @param type $key
+     */
+    public function Unregister($type, $key = null)
+    {
+	$type = $this->normalizeType($type);
+	$key = $this->normalizeKey($key);
+	unset($this->factorys[$type][$key]);
+	if (!count($this->factorys[$type]))
+	    unset($this->factorys[$type]);
+	unset($this->implemented[$type][$key]);
+	if (!count($this->implemented[$type]))
+	    unset($this->implemented[$type]);
+	unset($this->instances[$type][$key]);
+	if (!count($this->instances[$type]))
+	    unset($this->instances[$type]);
+	unset($this->interfaces[$type][$key]);
+	if (!count($this->interfaces[$type]))
+	    unset($this->interfaces[$type]);
+	unset($this->registries[$type][$key]);
+	if (!count($this->registries[$type]))
+	    unset($this->registries[$type]);
+	unset($this->selfParams[$type][$key]);
+	if (!count($this->selfParams[$type]))
+	    unset($this->selfParams[$type]);
+    }
+
+    /**
      * 清空容器
      */
     public function Clear()
@@ -441,7 +474,7 @@ class DIContainer
      * @throws \DIServer\Lib\DI\DIContainer\Exception\DependenceCycleException
      * @throws \DIServer\Lib\DI\DIContainer\Exception\MakeFailedException
      */
-    protected function makeInstance($type, array $parameters = [], $key = null)
+    protected function MakeInstance($type, array $parameters = [], $key = null)
     {
 	if (in_array($type . '[' . $key . ']', $this->buildStack))
 	    throw new DependenceCycleException($this->buildStack);
@@ -571,7 +604,7 @@ class DIContainer
      * 
      * @throws Exception
      */
-    protected function buildWithClass($className, array $parameters = [])
+    public function BuildWithClass($className, array $parameters = [])
     {
 	//构造类反射对象
 	$classReflector = new \ReflectionClass($className);
@@ -814,13 +847,69 @@ class DIContainer
 	if (!interface_exists($abstract))
 	{
 	    //如果是抽象类也可以接受
-	    $refClass = new ReflectionClass($interface);
+	    $refClass = new \ReflectionClass($abstract);
 	    return $refClass->isAbstract();
 	}
 	else
 	{
 	    return true;
 	}
+    }
+
+    /**
+     * Determine if a given offset exists.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    public function offsetExists($key)
+    {
+	return isset($this->registries[$key]);
+    }
+
+    /**
+     * Get the value at a given offset.
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    public function offsetGet($key)
+    {
+	return $this->GetInstance($key);
+    }
+
+    /**
+     * Set the value at a given offset.
+     *
+     * @param  string  $key
+     * @param  mixed   $value
+     * @return void
+     */
+    public function offsetSet($key, $value)
+    {
+	// If the value is not a Closure, we will make it one. This simply gives
+	// more "drop-in" replacement functionality for the Pimple which this
+	// container's simplest functions are base modeled and built after.
+	if (!$value instanceof \Closure)
+	{
+	    $value = function () use ($value)
+	    {
+		return $value;
+	    };
+	}
+
+	$this->Register($key, $value);
+    }
+
+    /**
+     * Unset the value at a given offset.
+     *
+     * @param  string  $key
+     * @return void
+     */
+    public function offsetUnset($key)
+    {
+	$this->Unregister($key);
     }
 
 }
