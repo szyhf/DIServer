@@ -1,7 +1,7 @@
 {
-    "name": "diserver/framework",
+    "name": "szyhf/DIServerFramework",
     "description": "The DIServer Framework.",
-    "keywords": ["framework", "DIServer"],
+    "keywords": ["framework", "DIServer","swoole"],
     "license": "Apache2",
     "homepage": "https://github.com/szyhf/DIServer",
     "support": {
