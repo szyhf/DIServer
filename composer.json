@@ -1,5 +1,5 @@
 {
-    "name": "szyhf/DIServerFramework",
+    "name": "diserver/framework",
     "description": "The DIServer Framework.",
     "keywords": ["framework", "DIServer","swoole"],
     "license": "Apache2",
@@ -23,6 +23,6 @@
     "require": {
     	"php": ">=5.5.9",
 	"ext-swoole": ">=1.7.20",
-	"topthink/thinkphp":"dev-master"
+	"szyhf/thinkphp":"dev-master"
 	}
 }
