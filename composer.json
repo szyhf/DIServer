@@ -23,6 +23,6 @@
     "require": {
     	"php": ">=5.5.9",
 	"ext-swoole": ">=1.7.20",
-	"szyhf/thinkphp":"dev-master"
+	"topthink/thinkphp":"dev-master"
 	}
 }
