@@ -24,5 +24,8 @@
     	"php": ">=5.5.9",
 	"ext-swoole": ">=1.7.20",
 	"topthink/thinkphp":"dev-master"
-	}
+	},
+    "autoload": {
+        "psr-4": {"DIServer\\": "src/"}
+    }
 }
