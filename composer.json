@@ -1,0 +1,28 @@
+{
+    "name": "diserver/framework",
+    "description": "The DIServer Framework.",
+    "keywords": ["framework", "DIServer"],
+    "license": "Apache2",
+    "homepage": "https://github.com/szyhf/DIServer",
+    "support": {
+        "issues": "https://github.com/szyhf/DIServer/wiki",
+        "source": "https://github.com/szyhf/DIServer"
+    },
+    "authors": [
+        {
+            "name": "Back Yu",
+            "email": "yhf_szb@163.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/szyhf/thinkphp.git"
+        }
+    ]
+    "require": {
+    	"php": ">=5.5.9",
+	"ext-swoole": ">=1.7.20",
+	"topthink/thinkphp":"dev-master"
+	}
+}
