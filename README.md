@@ -1,6 +1,6 @@
 DIServer Framework
 =======================
-作为一个啰嗦的作者为了便于啰嗦，所有所有的最近情况都放到issues里边的Notes中啦~~
+作为一个啰嗦的作者为了便于啰嗦，所以以后所有的最近情况都放到issues里边的[Notes](https://github.com/szyhf/DIServer/issues/6)中啦~~
 
 ## 简介
 
