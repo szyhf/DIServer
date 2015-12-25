@@ -11,41 +11,50 @@ use \DIServer\Application as Application;
  */
 abstract class Service
 {
-    /**
-     * 当前主程
-     * @var \DIServer\Application
-     */
-    private $app;
+	/**
+	 * 当前主程
+	 *
+	 * @var \DIServer\Application
+	 */
+	private $app;
 
-    public function __construct(Application $app)
-    {
-	$this->SetApp($app);
-    }
-    
-    /**
-     * 注册当前服务
-     */
-    public function Register()
-    {
-	
-    }
+	public function __construct(Application $app)
+	{
+		$this->SetApp($app);
+	}
 
-    /**
-     * 获取当前主程
-     * @return \DIServer\Application
-     */
-    protected function App()
-    {
-	return $this->app;
-    }
+	/**
+	 * 注册当前服务
+	 */
+	public function Register()
+	{
 
-    /**
-     * 
-     * @param \DIServer\Application $app
-     */
-    protected function SetApp(Application $app)
-    {
-	$this->app = $app;
-    }
+	}
+
+	/**
+	 * 获取当前主程
+	 *
+	 * @return \DIServer\Application
+	 */
+	protected function GetApp()
+	{
+		return $this->app;
+	}
+
+	/**
+	 * @return \DIServer\DI\DIContainer
+	 */
+	protected function GetIOC()
+	{
+		return $this->GetApp()->GetIOC();
+	}
+
+	/**
+	 * @param \DIServer\Application $app
+	 */
+	protected function SetApp(Application $app)
+	{
+		$this->app = $app;
+	}
 
 }
