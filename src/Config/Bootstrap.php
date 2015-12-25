@@ -3,7 +3,8 @@
 return [
     \DIServer\Bootstraps\CheckEnvironment::class,
     \DIServer\Bootstraps\DetectEnvironment::class,
+	\DIServer\Bootstraps\LoadBaseConfig::class,
     \DIServer\Bootstraps\InitLogging::class,
-    \DIServer\Bootstraps\InitSwooleServer::class,    
-    \DIServer\Bootstraps\SetSwooleConfig::class,
+	\DIServer\Bootstraps\RegisterServices::class,
+    \DIServer\Bootstraps\InitSwooleServer::class,
 ];
