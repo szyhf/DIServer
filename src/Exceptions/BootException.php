@@ -7,7 +7,7 @@ use \DIServer\Exceptions\Exception as Exception;
  *
  * @author Back
  */
-class BootException extends \DIServer\DI\DIContainer\Exception
+class BootException extends \DIServer\Exceptions\Exception
 {
     
 }
