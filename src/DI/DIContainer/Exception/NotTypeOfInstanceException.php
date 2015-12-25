@@ -1,5 +1,5 @@
 <?php
-namespace DIServer\Lib\DI\DIContainer\Exception;
+namespace DIServer\DI\DIContainer\Exception;
 
 /**
  * 尝试把一个不属于指定类型的实例注册给该类型时触发。

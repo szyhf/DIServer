@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-namespace DIServer\Lib\DI\Locater;
+namespace DIServer\DI\Locater;
 
 /**
  * Handler的专用管理器

@@ -1,5 +1,5 @@
 <?php
-namespace DIServer\Lib\DI\DIContainer\Exception;
+namespace DIServer\DI\DIContainer\Exception;
 
 /**
  * 尝试注册已经已经被注册过的类型且未设置正确的多例时触发

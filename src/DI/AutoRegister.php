@@ -1,8 +1,8 @@
 <?php
 
-namespace DIServer\Lib\DI;
+namespace DIServer\DI;
 
-use DIServer\Lib\DI\DIContainer\DIContainer;
+use DIServer\DI\DIContainer\DIContainer;
 
 /**
  * 自动注册机（用于注册指定目录下的文件类）
@@ -13,7 +13,7 @@ class AutoRegister
 
 	/**
 	 * 默认容器
-	 * @var DIServer\Lib\DI\DIContainer\DIContainer
+	 * @var DIServer\DI\DIContainer\DIContainer
 	 */
 	private $container;
 

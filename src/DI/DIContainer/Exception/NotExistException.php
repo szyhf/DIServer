@@ -1,5 +1,5 @@
 <?php
-namespace DIServer\Lib\DI\DIContainer\Exception;
+namespace DIServer\DI\DIContainer\Exception;
 
 /**
  * 尝试注册一个不存在的类型

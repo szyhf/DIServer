@@ -1,5 +1,5 @@
 <?php
-namespace DIServer\Lib\DI\DIContainer\Exception;
+namespace DIServer\DI\DIContainer\Exception;
 
 /**
  * DIContainer所有异常的基类

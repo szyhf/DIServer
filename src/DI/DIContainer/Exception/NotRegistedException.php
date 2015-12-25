@@ -1,5 +1,5 @@
 <?php
-namespace DIServer\Lib\DI\DIContainer\Exception;
+namespace DIServer\DI\DIContainer\Exception;
 
 /**
  * 尝试获取一个未注册的类型时发生
