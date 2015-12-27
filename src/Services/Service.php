@@ -3,6 +3,7 @@
 namespace DIServer\Services;
 
 use \DIServer\Application as Application;
+use DIServer\Container\Container;
 
 /**
  * Description of Service
@@ -39,14 +40,6 @@ abstract class Service
 	protected function GetApp()
 	{
 		return $this->app;
-	}
-
-	/**
-	 * @return \DIServer\DI\DIContainer
-	 */
-	protected function GetIOC()
-	{
-		return $this->GetApp()->GetIOC();
 	}
 
 	/**

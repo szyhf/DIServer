@@ -8,19 +8,34 @@
 
 namespace DIServer\Bootstraps;
 
-use DIServer\Package;
-
 class RegisterServices extends Bootstrap
 {
 	public function Bootstrap()
 	{
+		$this->loadService();
+		$this->setAlias();
+	}
+
+	/**
+	 * @throws \DIServer\Container\NotExistException
+	 * @throws \DIServer\Container\RegistedException
+	 */
+	protected function loadService()
+	{
 		/** @var array $serviceConfig */
-		$serviceConfig = include DI_CONFIG_PATH . '/Services.php';
+		$serviceConfig = include DI_REGISTRY_PATH . '/Server.php';
 		foreach($serviceConfig as $iface => $imp)
 		{
-			$this->GetIOC()->RegisterClass($imp);
+			$this->GetApp()->RegisterClass($imp);
 			if(interface_exists($iface))
-				$this->GetIOC()->RegisterInterfaceByClass($iface, $imp);
+			{
+				$this->GetApp()->RegisterInterfaceByClass($iface, $imp);
+			}
 		}
+	}
+
+	protected function setAlias()
+	{
+
 	}
 }

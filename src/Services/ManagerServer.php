@@ -2,7 +2,7 @@
 
 namespace DIServer\Services;
 
-use \DIServer\Interfaces\IManagerServer as IManagerServer;
+use DIServer\Interfaces\IManagerServer as IManagerServer;
 
 /**
  * Description of ManagerServer
@@ -12,16 +12,16 @@ use \DIServer\Interfaces\IManagerServer as IManagerServer;
 class ManagerServer extends Service implements IManagerServer
 {
 
-    public function OnManagerStart(\swoole_server $server)
-    {
-	//Log('Server Start');
-	var_dump("Server Start");
-    }
+	public function OnManagerStart(\swoole_server $server)
+	{
+		//Log('Server Start');
+		echo("OnManagerStart" . PHP_EOL);
+	}
 
-    public function OnManagerStop(\swoole_server $server)
-    {
-	//Log('Server Stop');
-	var_dump("Server Stop");
-    }
+	public function OnManagerStop(\swoole_server $server)
+	{
+		//Log('Server Stop');
+		echo("OnManagerStop" . PHP_EOL);
+	}
 
 }

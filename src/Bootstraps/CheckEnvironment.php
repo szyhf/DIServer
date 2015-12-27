@@ -2,7 +2,6 @@
 
 namespace DIServer\Bootstraps;
 
-use \DIServer\Exceptions\BootException as BootException;
 
 /**
  * 检查运行环境
