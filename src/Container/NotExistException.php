@@ -1,12 +1,12 @@
 <?php
-namespace DIServer\DI\DIContainer\Exception;
+namespace DIServer\Container;
 
 /**
  * 尝试注册一个不存在的类型
  *
  * @author Back
  */
-class NotExistException extends DIContainerException
+class NotExistException extends ContainerException
 {
     public function __construct($type,$key)
     {

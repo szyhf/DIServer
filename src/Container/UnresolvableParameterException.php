@@ -1,12 +1,12 @@
 <?php
-namespace DIServer\DI\DIContainer\Exception;
+namespace DIServer\Container;
 
 /**
  * Description of UnresolvableException
  *
  * @author Back
  */
-class UnresolvableParameterException extends DIContainerException
+class UnresolvableParameterException extends ContainerException
 {
     public function __construct(\ReflectionParameter $parameter)
     {

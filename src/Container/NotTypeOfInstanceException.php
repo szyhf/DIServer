@@ -1,12 +1,12 @@
 <?php
-namespace DIServer\DI\DIContainer\Exception;
+namespace DIServer\Container;
 
 /**
  * 尝试把一个不属于指定类型的实例注册给该类型时触发。
  *
  * @author Back
  */
-class NotTypeOfInstanceException extends DIContainerException
+class NotTypeOfInstanceException extends ContainerException
 {
     public function __construct($type,$key)
     {
