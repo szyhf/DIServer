@@ -6,7 +6,7 @@ namespace DIServer\Exceptions;
  *
  * @author Back
  */
-class ServerException extends \DIServer\DI\DIContainer\Exception
+class ServerException extends \DIServer\Exception
 {
-    //put your code here
+	//put your code here
 }
