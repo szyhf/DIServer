@@ -21,8 +21,8 @@ class InitSwooleServer extends Bootstrap
 			'serv_host' => '127.0.0.1', 'serv_port' => '13123', 'serv_mode' => SWOOLE_PROCESS,
 			'sock_type' => SWOOLE_SOCK_TCP,
 		];
-		$this->GetApp()->RegisterClass(\swoole_server::class, $initParams);
-		$this->swoole = $this->GetApp()->GetInstance(\swoole_server::class);
+		$this->getApp()->RegisterClass(\swoole_server::class, $initParams);
+		$this->swoole = $this->getApp()->GetInstance(\swoole_server::class);
 		$this->setConfig();
 		$this->setProxy();
 		$this->swoole->start();
@@ -73,7 +73,7 @@ class InitSwooleServer extends Bootstrap
 	protected function setProxy()
 	{
 		/** @var \DIServer\Services\Service $swooleProxy */
-		$swooleProxy = $this->GetApp()->GetInstance(\DIServer\Services\SwooleProxy::class);
+		$swooleProxy = $this->getApp()->GetInstance(\DIServer\Services\SwooleProxy::class);
 		$swooleProxy->Register();
 	}
 

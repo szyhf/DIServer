@@ -2,10 +2,7 @@
 
 namespace DIServer\Services
 {
-
-	use DIServer\Interfaces\IBootstrapper as IBootstrapper;
-
-	class Bootstrapper extends Service implements IBootstrapper
+	class Bootstrapper extends Service
 	{
 
 		protected $bootstraps;
@@ -16,7 +13,7 @@ namespace DIServer\Services
 			foreach($this->bootstraps as $boot)
 			{
 				/* @var $bootstrap \DIServer\Bootstraps\Bootstrap */
-				$bootstrap = $this->GetApp()->BuildWithClass($boot);
+				$bootstrap = $this->getApp()->BuildWithClass($boot);
 				$bootstrap->BeforeBootstrap();
 				$bootstrap->Bootstrap();
 				$bootstrap->AfterBootstrap();

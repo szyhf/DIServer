@@ -26,10 +26,10 @@ class RegisterServices extends Bootstrap
 		$serviceConfig = include DI_REGISTRY_PATH . '/Server.php';
 		foreach($serviceConfig as $iface => $imp)
 		{
-			$this->GetApp()->RegisterClass($imp);
+			$this->getApp()->RegisterClass($imp);
 			if(interface_exists($iface))
 			{
-				$this->GetApp()->RegisterInterfaceByClass($iface, $imp);
+				$this->getApp()->RegisterInterfaceByClass($iface, $imp);
 			}
 		}
 	}

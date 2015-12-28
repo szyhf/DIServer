@@ -4,7 +4,7 @@
  * 由于Swoole服务一旦启动就不能修改配置，所以这个配置中的参数修改以后无法通过Reload重载。
  * 设置为''表示采用swoole_server的默认设置。
  *
- * @link wiki.swoole.com swoole服务的配置，请参考手册
+ * @link http://wiki.swoole.com swoole服务的配置，请参考手册
  */
 return [
 	'reactor_num'              => '', //使用的CPU核心数，不设置表示根据机器选择（建议为设置为CPU核数*2）
@@ -17,7 +17,8 @@ return [
 	'task_tmpdir'              => DI_APP_SERVER_TEMP_PATH, //设置task的数据临时目录，在swoole_server中，如果投递的数据超过8192字节，将启用临时文件来保存数据。
 	'dispatch_mode'            => 2, //1轮循模式，2固定模式，3抢占模式，4IP分配，5UID分配。
 	'message_queue_key'        => ftok(DI_APP_SERVER_PATH, 3), //设置消息队列的KEY
-	'daemonize'                => DI_DAEMONIZE, 'backlog' => 128, //Listen队列长度，此参数将决定最多同时有多少个等待accept的连接。
+	'daemonize'                => DI_DAEMONIZE,//是否作为守护进程
+	'backlog'                  => 128, //Listen队列长度，此参数将决定最多同时有多少个等待accept的连接。
 	'log_file'                 => DI_LOG_PATH . '/' . DI_LOG_FILE_NAME, //指定swoole的日志文件（启用守护进程后，标准输入和输出会被重定向到 log_file）。
 	'heartbeat_check_interval' => 60, //启用心跳检测，此选项表示每隔多久轮循一次，单位为秒。
 	'heartbeat_idle_time'      => 120, //表示连接最大允许空闲（没消息）的时间

@@ -1,8 +1,7 @@
 <?php
-namespace DIServer\Swoole;
+namespace DIServer\Services;
 
 use DIServer\Interfaces\IWorkerServer as IWorkerServer;
-use DIServer\Services\Service as Service;
 
 /**
  * Description of WorkerServer
@@ -68,7 +67,7 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnWorkerStart(\swoole_server $server, $worker_id)
 	{
-		echo("On Worker[$worker_id] Start." . PHP_EOL);
+		echo("OnWorkerStart[$worker_id]" . PHP_EOL);
 	}
 
 	/**
@@ -92,7 +91,7 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnWorkerStop(\swoole_server $server, $worker_id)
 	{
-		echo("On Worker[$worker_id] Stop." . PHP_EOL);
+		echo("OnWorkerStop[$worker_id]" . PHP_EOL);
 	}
 
 	/**

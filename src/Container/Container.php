@@ -1,11 +1,12 @@
 <?php
 
 namespace DIServer\Container;
+use DIServer\Interfaces\Container\IContainer;
 
 /**
  * IOC容器类
  */
-class Container implements \ArrayAccess
+class Container implements IContainer
 {
 
 	/**
@@ -105,7 +106,7 @@ class Container implements \ArrayAccess
 	 *
 	 * @return Container
 	 */
-	public static function Container()
+	public static function Instance()
 	{
 		if(!self::$defaultIOC)
 		{
@@ -179,7 +180,7 @@ class Container implements \ArrayAccess
 	}
 
 	/**
-	 * 设置别名
+	 * 设置别名（仅保存映射名，不会检查映射名是否存在）
 	 *
 	 * @param string $alias
 	 * @param string $type
@@ -994,6 +995,11 @@ class Container implements \ArrayAccess
 		}
 	}
 
+	/**
+	 * 移除别名
+	 *
+	 * @param $alias
+	 */
 	public function RemoveAlias($alias)
 	{
 		unset($this->alias[$alias]);

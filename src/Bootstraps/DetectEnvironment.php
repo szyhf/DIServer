@@ -12,18 +12,17 @@ class DetectEnvironment extends Bootstrap
 
 	public function Bootstrap()
 	{
-		parent::Bootstrap();
-		//	try
-		//	{
-		//	    $env = new \Dotenv\Dotenv($this->app->GetBasePath(), 'env');
-		//	    $env->load();
-		//	    var_dump($_ENV);
-		//	    var_dump(getenv('CACHE_DIR'));
-		//	}
-		//	catch (\Exception $ex)
-		//	{
-		//	    var_dump($ex);
-		//	}
+		//try
+		//{
+		//	$env = new \Dotenv\Dotenv($this->GetApp()->GetBasePath());
+		//	$env->load();
+		//	var_dump($_ENV);
+		//	var_dump(${getenv('BASE_DIR')});
+		//}
+		//catch(\Exception $ex)
+		//{
+		//	var_dump($ex);
+		//}
 
 		$this->OldBoot();
 	}

@@ -4,15 +4,15 @@ namespace DIServer
 {
 
 	use DIServer\Container\Container as Container;
-	use DIServer\Interfaces\IBootstrapper as IBootstrapper;
-	use DIServer\Services\Bootstrapper as Bootstrapper;
+	use DIServer\Interfaces\Bootstraps\IBootstrapper as IBootstrapper;
+	use DIServer\Interfaces\IApplication;
 
 	/**
 	 * 主程序
 	 *
 	 * @author Back
 	 */
-	class Application extends Container
+	class Application extends Container implements IApplication
 	{
 		/**
 		 * 项目目录
@@ -22,41 +22,69 @@ namespace DIServer
 		protected $basePath;
 
 		/**
-		 * 环境目录
-		 *
 		 * @var string
 		 */
-		protected $envermentPath;
+		protected $frameworkPath;
 
 		/**
 		 * Application的构造函数
 		 *
 		 * @param string $basePath 应用目录
 		 */
-		public function __construct($basePath = __DIR__)
+		public function __construct($basePath)
 		{
-			parent::__construct();
-			$this->RegisterClassByInstance(get_class($this), $this);
-			$this->registerBaseClass();
-			$this->registerBaseServiceProviders();
-			//	$this->registerCoreContainerAliases();
 			if($basePath)
 			{
 				$this->setBasePath($basePath);
 			}
+			$this->setFrameworkPath(__DIR__);
+			$this->bindBaseClass();
+			$this->bindBaseService();
+			$this->bindCoreAliases();
 		}
 
-		protected function registerBaseClass()
+		protected function bindBaseClass()
 		{
-
+			$this->RegisterInterfaceByClass(IApplication::class, get_class($this));
+			var_dump($this);
+			die;
 		}
 
-		protected function registerBaseServiceProviders()
+		protected function bindBaseService()
 		{
-			//	var_dump(interface_exists(IBootstrapper::class));
-			$this->RegisterClass(Bootstrapper::class);
-			$this->RegisterInterfaceByClass(IBootstrapper::class, Bootstrapper::class);
-			$this->RegisterClass(\DIServer\Services\SwooleProxy::class);
+			//echo ($this->GetFrameworkPath() . '/Registry/Base.php') . "\n";
+			$baseServices = include $this->GetFrameworkPath() . '/Registry/Base.php';
+			foreach($baseServices as $iface => $serv)
+			{
+				if(class_exists($serv))
+				{
+					$this->RegisterClass($serv);
+					if($this->isAbstract($iface))
+					{
+						$this->RegisterInterfaceByClass($iface, $serv);
+					}
+				}
+			}
+			//$this->RegisterClass(Bootstrapper::class);
+			//$this->RegisterInterfaceByClass(IBootstrapper::class, Bootstrapper::class);
+			//$this->RegisterClass(\DIServer\Services\SwooleProxy::class);
+		}
+
+		/**
+		 *  注册一些核心服务的别名，便于调用
+		 */
+		protected function bindCoreAliases()
+		{
+			$alias = [
+				'App'    => get_class($this),
+				'Swoole' => \swoole_server::class
+			];
+			foreach($alias as $alia => $type)
+			{
+				$this->SetAlias($alia, $type);
+			}
+
+			return $this;
 		}
 
 		/**
@@ -80,7 +108,7 @@ namespace DIServer
 		}
 
 		/**
-		 * Set the base path for the application.
+		 * 设置应用目录
 		 *
 		 * @param  string $basePath
 		 *
@@ -89,16 +117,33 @@ namespace DIServer
 		public function SetBasePath($basePath)
 		{
 			$this->basePath = realpath(rtrim($basePath, '\/'));
+			return $this;
+		}
 
-			//        $this->bindPathsInContainer();
+		/**
+		 * 获取框架基础路径
+		 *
+		 * @return string
+		 */
+		public function GetFrameworkPath()
+		{
+			return $this->frameworkPath;
+		}
+
+		/**
+		 * 设置框架基础路径
+		 *
+		 * @param string $frameworkPath
+		 *
+		 * @return Application
+		 */
+		protected function setFrameworkPath($frameworkPath = __DIR__)
+		{
+			$this->frameworkPath = realpath(rtrim($frameworkPath, '\/'));
 
 			return $this;
 		}
 
-		protected function registerCoreContainerAliases()
-		{
-			$this->SetAlias('App', Application::class);
-		}
 
 	}
 }

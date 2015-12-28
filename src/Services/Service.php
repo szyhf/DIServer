@@ -2,26 +2,31 @@
 
 namespace DIServer\Services;
 
-use \DIServer\Application as Application;
-use DIServer\Container\Container;
+use \DIServer\Interfaces\IApplication as IApplication;
+use DIServer\Interfaces\Services\IService;
 
 /**
  * Description of Service
  *
  * @author Back
  */
-abstract class Service
+abstract class Service implements IService
 {
 	/**
 	 * 当前主程
 	 *
-	 * @var \DIServer\Application
+	 * @var \DIServer\Interfaces\IApplication
 	 */
 	private $app;
 
-	public function __construct(Application $app)
+	/**
+	 * IService constructor.
+	 *
+	 * @param \DIServer\Interfaces\IApplication $app
+	 */
+	public function __construct(IApplication $app)
 	{
-		$this->SetApp($app);
+		$this->setApp($app);
 	}
 
 	/**
@@ -35,17 +40,17 @@ abstract class Service
 	/**
 	 * 获取当前主程
 	 *
-	 * @return \DIServer\Application
+	 * @return \DIServer\Interfaces\Application
 	 */
-	protected function GetApp()
+	protected function getApp()
 	{
 		return $this->app;
 	}
 
 	/**
-	 * @param \DIServer\Application $app
+	 * @param \DIServer\Interfaces\Application $app
 	 */
-	protected function SetApp(Application $app)
+	protected function setApp(Application $app)
 	{
 		$this->app = $app;
 	}
