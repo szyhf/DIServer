@@ -1,8 +1,9 @@
 <?php
 
-namespace DIServer\Services;
+namespace DIServer\Swoole;
 
 use DIServer\Interfaces\IManagerServer as IManagerServer;
+use DIServer\Services\Service as Service;
 
 /**
  * Description of ManagerServer

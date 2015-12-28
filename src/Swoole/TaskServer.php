@@ -6,10 +6,10 @@
  * and open the template in the editor.
  */
 
-namespace DIServer\Services;
+namespace DIServer\Swoole;
 
 use DIServer\Interfaces\ITaskServer as ITaskServer;
-
+use DIServer\Services\Service as Service;
 /**
  * Description of TaskServer
  *

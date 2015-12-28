@@ -1,9 +1,9 @@
 <?php
 
-namespace DIServer\Services;
+namespace DIServer\Swoole;
 
 use DIServer\Interfaces\IMasterServer as IMasterServer;
-
+use DIServer\Services\Service as Service;
 /**
  * Description of MasterServer
  *

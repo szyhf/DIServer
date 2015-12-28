@@ -112,17 +112,27 @@ class SwooleProxy extends Service implements ISwooleProxy
 		$this->taskServer->OnTask($server, $task_id, $from_id, $param);
 	}
 
+	/**
+	 * 工作进程异常的代理（划分Task进程和Worker进程）
+	 *
+	 * @param \swoole_server $server     当前服务
+	 * @param int            $worker_id  工作进程id
+	 * @param int            $worker_pid 工作进程pid
+	 * @param int            $exit_code  错误代码
+	 *
+	 * @throws \DIServer\Container\NotRegistedException
+	 */
 	public function OnWorkerError(\swoole_server $server, $worker_id, $worker_pid, $exit_code)
 	{
 		if($server->taskworker)
 		{
 			$this->taskServer = $this->GetApp()->GetInstance(ITaskServer::class);
-			$this->taskServer->OnTaskWorkerError($server, $worker_id);
+			$this->taskServer->OnTaskWorkerError($server, $worker_id, $worker_pid, $exit_code);
 		}
 		else
 		{
 			$this->workerServer = $this->GetApp()->GetInstance(IWorkerServer::class);
-			$this->workerServer->OnWorkerError($server, $worker_id);
+			$this->workerServer->OnWorkerError($server, $worker_id, $worker_pid, $exit_code);
 		}
 	}
 

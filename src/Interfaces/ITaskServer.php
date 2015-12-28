@@ -30,7 +30,7 @@ interface ITaskServer
      * @param \swoole_server $server 当前进程的swoole_server对象
      * @param int $worker_id 当前进程的ID
      */
-    public function OnTaskWorkerStop(\swoole_server $server, $worker_id);
+    public function OnTaskWorkerStop(\swoole_server $server, $task_worker_id);
 
     /**
      * TaskWorker收到任务时触发
