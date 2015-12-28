@@ -1,7 +1,7 @@
 <?php
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\IWorkerServer as IWorkerServer;
+use DIServer\Interfaces\Swoole\IWorkerServer as IWorkerServer;
 use DIServer\Services\Service as Service;
 
 /**

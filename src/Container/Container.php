@@ -723,7 +723,7 @@ class Container implements IContainer
 	 *
 	 * @return boolean
 	 */
-	protected function isAbstract($abstract)
+	public function isAbstract($abstract)
 	{
 		if(!interface_exists($abstract))
 		{

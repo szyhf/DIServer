@@ -4,9 +4,8 @@ namespace DIServer
 {
 
 	use DIServer\Container\Container as Container;
-	use DIServer\Interfaces\Bootstraps\IBootstrapper as IBootstrapper;
 	use DIServer\Interfaces\IApplication;
-
+	use \DIServer\Interfaces\Bootstraps\IBootstrapper;
 	/**
 	 * 主程序
 	 *
@@ -33,6 +32,7 @@ namespace DIServer
 		 */
 		public function __construct($basePath)
 		{
+			parent::__construct();
 			if($basePath)
 			{
 				$this->setBasePath($basePath);
@@ -45,79 +45,33 @@ namespace DIServer
 
 		protected function bindBaseClass()
 		{
+			$this->RegisterClassByInstance(__CLASS__, $this);
 			$this->RegisterInterfaceByClass(IApplication::class, get_class($this));
-			var_dump($this);
-			die;
 		}
 
 		protected function bindBaseService()
 		{
 			//echo ($this->GetFrameworkPath() . '/Registry/Base.php') . "\n";
 			$baseServices = include $this->GetFrameworkPath() . '/Registry/Base.php';
+			//var_dump($baseServices);
 			foreach($baseServices as $iface => $serv)
 			{
 				if(class_exists($serv))
 				{
 					$this->RegisterClass($serv);
-					if($this->isAbstract($iface))
+					if($this->IsAbstract($iface))
 					{
 						$this->RegisterInterfaceByClass($iface, $serv);
 					}
+				}
+				else
+				{
+					echo "Base service $serv is not exist.\n";
 				}
 			}
 			//$this->RegisterClass(Bootstrapper::class);
 			//$this->RegisterInterfaceByClass(IBootstrapper::class, Bootstrapper::class);
 			//$this->RegisterClass(\DIServer\Services\SwooleProxy::class);
-		}
-
-		/**
-		 *  注册一些核心服务的别名，便于调用
-		 */
-		protected function bindCoreAliases()
-		{
-			$alias = [
-				'App'    => get_class($this),
-				'Swoole' => \swoole_server::class
-			];
-			foreach($alias as $alia => $type)
-			{
-				$this->SetAlias($alia, $type);
-			}
-
-			return $this;
-		}
-
-		/**
-		 * 启动应用程序
-		 */
-		public function Start()
-		{
-
-		}
-
-		public function boot()
-		{
-			/* @var $bootstrapper \DIServer\Interfaces\IBootstrapper */
-			$bootstrapper = $this->GetInstance(IBootstrapper::class);
-			$bootstrapper->Boot();
-		}
-
-		public function GetBasePath()
-		{
-			return $this->basePath;
-		}
-
-		/**
-		 * 设置应用目录
-		 *
-		 * @param  string $basePath
-		 *
-		 * @return $this
-		 */
-		public function SetBasePath($basePath)
-		{
-			$this->basePath = realpath(rtrim($basePath, '\/'));
-			return $this;
 		}
 
 		/**
@@ -140,6 +94,56 @@ namespace DIServer
 		protected function setFrameworkPath($frameworkPath = __DIR__)
 		{
 			$this->frameworkPath = realpath(rtrim($frameworkPath, '\/'));
+
+			return $this;
+		}
+
+		/**
+		 *  注册一些核心服务的别名，便于调用
+		 */
+		protected function bindCoreAliases()
+		{
+			$alias = [
+				'App' => get_class($this), 'Swoole' => \swoole_server::class
+			];
+			foreach($alias as $alia => $type)
+			{
+				$this->SetAlias($alia, $type);
+			}
+
+			return $this;
+		}
+
+		/**
+		 * 启动应用程序
+		 */
+		public function Start()
+		{
+
+		}
+
+		public function boot()
+		{
+			/* @var $bootstrapper \DIServer\Interfaces\Bootstraps\IBootstrapper */
+			$bootstrapper = $this->GetInstance(IBootstrapper::class);
+			$bootstrapper->Boot();
+		}
+
+		public function GetBasePath()
+		{
+			return $this->basePath;
+		}
+
+		/**
+		 * 设置应用目录
+		 *
+		 * @param  string $basePath
+		 *
+		 * @return $this
+		 */
+		public function SetBasePath($basePath)
+		{
+			$this->basePath = realpath(rtrim($basePath, '\/'));
 
 			return $this;
 		}

@@ -9,7 +9,9 @@
 namespace DIServer\Interfaces;
 
 
-interface IApplication
+use DIServer\Interfaces\Container\IContainer;
+
+interface IApplication extends IContainer
 {
 	
 }

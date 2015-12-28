@@ -27,7 +27,7 @@ class RegisterServices extends Bootstrap
 		foreach($serviceConfig as $iface => $imp)
 		{
 			$this->getApp()->RegisterClass($imp);
-			if(interface_exists($iface))
+			if($this->getApp()->IsAbstract($iface))
 			{
 				$this->getApp()->RegisterInterfaceByClass($iface, $imp);
 			}

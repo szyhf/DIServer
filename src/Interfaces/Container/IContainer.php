@@ -194,4 +194,13 @@ interface IContainer extends \ArrayAccess
 	 * @param $alias
 	 */
 	public function RemoveAlias($alias);
+
+	/**
+	 * 是不是接口或者抽象类
+	 *
+	 * @param string $abstract
+	 *
+	 * @return boolean
+	 */
+	public function IsAbstract($abstract);
 }

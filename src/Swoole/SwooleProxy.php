@@ -1,11 +1,12 @@
 <?php
-namespace DIServer\Services;
+namespace DIServer\Swoole;
 
-use DIServer\Interfaces\IManagerServer as IManagerServer;
-use DIServer\Interfaces\IMasterServer as IMasterServer;
-use DIServer\Interfaces\ISwooleProxy as ISwooleProxy;
-use DIServer\Interfaces\ITaskServer as ITaskServer;
-use DIServer\Interfaces\IWorkerServer as IWorkerServer;
+use DIServer\Interfaces\Swoole\IManagerServer as IManagerServer;
+use DIServer\Interfaces\Swoole\IMasterServer as IMasterServer;
+use DIServer\Interfaces\Swoole\ITaskServer as ITaskServer;
+use DIServer\Interfaces\Swoole\IWorkerServer as IWorkerServer;
+use DIServer\Interfaces\Swoole\ISwooleProxy ;
+use DIServer\Services\Service;
 
 /**
  * 根据进程拆分Swoole的回调
@@ -18,28 +19,28 @@ class SwooleProxy extends Service implements ISwooleProxy
 	/**
 	 * 主进程服务
 	 *
-	 * @var \DIServer\Interfaces\IMasterServer
+	 * @var \DIServer\Interfaces\Swoole\IMasterServer
 	 */
 	protected $masterServer;
 
 	/**
 	 * 管理进程服务
 	 *
-	 * @var \DIServer\Interfaces\IManagerServer
+	 * @var \DIServer\Interfaces\Swoole\IManagerServer
 	 */
 	protected $managerServer;
 
 	/**
 	 * Worker进程服务
 	 *
-	 * @var \DIServer\Interfaces\IWorkerServer
+	 * @var \DIServer\Interfaces\Swoole\IWorkerServer
 	 */
 	protected $workerServer;
 
 	/**
 	 * Task进程服务
 	 *
-	 * @var \DIServer\Interfaces\ITaskServer
+	 * @var \DIServer\Interfaces\Swoole\ITaskServer
 	 */
 	protected $taskServer;
 
@@ -189,5 +190,4 @@ class SwooleProxy extends Service implements ISwooleProxy
 	{
 		$this->managerServer->OnManagerStop($server);
 	}
-
 }

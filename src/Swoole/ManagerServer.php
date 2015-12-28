@@ -2,7 +2,7 @@
 
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\IManagerServer as IManagerServer;
+use DIServer\Interfaces\Swoole\IManagerServer as IManagerServer;
 use DIServer\Services\Service as Service;
 
 /**

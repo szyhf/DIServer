@@ -8,7 +8,7 @@
 
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\ITaskServer as ITaskServer;
+use DIServer\Interfaces\Swoole\ITaskServer as ITaskServer;
 use DIServer\Services\Service as Service;
 /**
  * Description of TaskServer

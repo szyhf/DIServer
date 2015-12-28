@@ -40,7 +40,7 @@ abstract class Service implements IService
 	/**
 	 * 获取当前主程
 	 *
-	 * @return \DIServer\Interfaces\Application
+	 * @return \DIServer\Interfaces\IApplication
 	 */
 	protected function getApp()
 	{
@@ -48,7 +48,7 @@ abstract class Service implements IService
 	}
 
 	/**
-	 * @param \DIServer\Interfaces\Application $app
+	 * @param \DIServer\Interfaces\IApplication $app
 	 */
 	protected function setApp(Application $app)
 	{
