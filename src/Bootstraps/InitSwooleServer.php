@@ -2,7 +2,7 @@
 
 namespace DIServer\Bootstraps;
 
-use DIServer\Swoole\SwooleProxy;
+use DIServer\Interfaces\Swoole\ISwooleProxy;
 
 /**
  * 初始化swooler_server，设置监听
@@ -18,7 +18,6 @@ class InitSwooleServer extends Bootstrap
 
 	public function Bootstrap()
 	{
-		parent::Bootstrap();
 		$initParams = [
 			'serv_host' => '127.0.0.1', 'serv_port' => '13123', 'serv_mode' => SWOOLE_PROCESS,
 			'sock_type' => SWOOLE_SOCK_TCP,
@@ -74,8 +73,8 @@ class InitSwooleServer extends Bootstrap
 
 	protected function setProxy()
 	{
-		/** @var \DIServer\Services\Service $swooleProxy */
-		$swooleProxy = $this->getApp()->GetInstance(SwooleProxy::class);
+		/** @var \DIServer\Interfaces\Swoole\ISwooleProxy $swooleProxy */
+		$swooleProxy = $this->getApp()->GetInstance(ISwooleProxy::class);
 		$swooleProxy->Register();
 	}
 
