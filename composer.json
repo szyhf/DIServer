@@ -23,7 +23,7 @@
     "require": {
         "php": ">=5.5.9",
         "ext-swoole": ">=1.7.20",
-        "topthink/thinkphp": "dev-master",
+        "psr/log": "~1.0",
         "monolog/monolog": "~1.11",
         "vlucas/phpdotenv":">=2.1.0"
     },
