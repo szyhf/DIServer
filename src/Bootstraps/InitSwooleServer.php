@@ -19,7 +19,9 @@ class InitSwooleServer extends Bootstrap
 	public function Bootstrap()
 	{
 		$initParams = [
-			'serv_host' => '127.0.0.1', 'serv_port' => '13123', 'serv_mode' => SWOOLE_PROCESS,
+			'serv_host' => '0.0.0.0',
+			'serv_port' => '13123',
+			'serv_mode' => SWOOLE_PROCESS,
 			'sock_type' => SWOOLE_SOCK_TCP,
 		];
 		$this->getApp()->RegisterClass(\swoole_server::class, $initParams);
@@ -34,7 +36,7 @@ class InitSwooleServer extends Bootstrap
 		//加载惯例配置//一次性配置，不用保存在内存中
 		$defaultConfig = include DI_CONFIG_PATH . '/Swoole.php';
 		//加载自定义配置//一次性配置，不用保存在内存中
-		$serverConfig = include DI_APP_SERVER_CONF_PATH . '/Swoole.php';
+		//$serverConfig = include DI_APP_SERVER_CONF_PATH . '/Swoole.php';
 		//更新配置
 		foreach($defaultConfig as $key => $value)
 		{
@@ -59,15 +61,19 @@ class InitSwooleServer extends Bootstrap
 		//有一些配置是DIServer运行必须控制的。
 		if($setting['task_worker_num'] <= 0)
 		{
-			throw new BootException("Warn: task_worker_num被设置为0。");
+			throw new BootException("Error: task_worker_num被设置为0。");
 		}
 		if($setting['task_ipc_mode'] != 2)
 		{
-			throw new BootException("Warn: task_ipc_mode设置不是2。");
+			throw new BootException("Error: task_ipc_mode设置不是2。");
 		}
 		if($setting['dispatch_mode'] == 1 || $setting['dispatch_mode'] == 3)
 		{
-			throw new BootException("Warn: dispatch_mode=1/3时，底层会屏蔽onConnect/onClose事件，原因是这2种模式下无法保证onConnect/onClose/onReceive的顺序。");
+			throw new BootException("Error: dispatch_mode=1/3时，底层会屏蔽onConnect/onClose事件，原因是这2种模式下无法保证onConnect/onClose/onReceive的顺序。");
+		}
+		if(isset($setting['chroot']))
+		{
+			throw new BootException("Error: chroot会导致autoloader无法在工作\任务进程正常使用，请确定你能处理然后过来注释这个异常。");
 		}
 	}
 

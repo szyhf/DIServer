@@ -37,9 +37,9 @@ class DetectEnvironment extends Bootstrap
 		defined('DI_COMMON_PATH') or define('DI_COMMON_PATH', DI_DISERVER_PATH . '/Common');
 		defined('DI_CONFIG_PATH') or define('DI_CONFIG_PATH', DI_DISERVER_PATH . '/Config');
 		defined('DI_REGISTRY_PATH') or define('DI_REGISTRY_PATH', DI_DISERVER_PATH . '/Registry');
-		defined('DI_REQUEST_PATH') or define('DI_REQUEST_PATH', DI_LIB_PATH . '/Request');
-		defined('DI_HANDLER_PATH') or define('DI_HANDLER_PATH', DI_LIB_PATH . '/Handler');
-		defined('DI_TICKER_PATH') or define('DI_TICKER_PATH', DI_LIB_PATH . '/Ticker');
+		//defined('DI_REQUEST_PATH') or define('DI_REQUEST_PATH', DI_LIB_PATH . '/Request');
+		//defined('DI_HANDLER_PATH') or define('DI_HANDLER_PATH', DI_LIB_PATH . '/Handler');
+		//defined('DI_TICKER_PATH') or define('DI_TICKER_PATH', DI_LIB_PATH . '/Ticker');
 
 		//APP级
 		defined('DI_APP_PATH') or define('DI_APP_PATH', realpath(APP_PATH));
@@ -50,14 +50,14 @@ class DetectEnvironment extends Bootstrap
 
 		//Server级
 		defined('DI_APP_SERVER_PATH') or define('DI_APP_SERVER_PATH', DI_APP_PATH . '/' . DI_SERVER_NAME);
-		defined('DI_APP_SERVER_COMMON_PATH') or define('DI_APP_SERVER_COMMON_PATH', DI_APP_SERVER_PATH . '/Common');
-		defined('DI_APP_SERVER_CONF_PATH') or define('DI_APP_SERVER_CONF_PATH', DI_APP_SERVER_PATH . '/Conf');
-		defined('DI_APP_SERVER_HANDLER_PATH') or define('DI_APP_SERVER_HANDLER_PATH', DI_APP_SERVER_PATH . '/Handler');
+		//defined('DI_APP_SERVER_COMMON_PATH') or define('DI_APP_SERVER_COMMON_PATH', DI_APP_SERVER_PATH . '/Common');
+		defined('DI_APP_SERVER_CONFIG_PATH') or define('DI_APP_SERVER_CONFIG_PATH', DI_APP_SERVER_PATH . '/Config');
+		//defined('DI_APP_SERVER_HANDLER_PATH') or define('DI_APP_SERVER_HANDLER_PATH', DI_APP_SERVER_PATH . '/Handler');
 		defined('DI_APP_SERVER_LISTENER_PATH') or define('DI_APP_SERVER_LISTENER_PATH', DI_APP_SERVER_PATH . '/Listeners');
 		defined('DI_APP_SERVER_REQUEST_PATH') or define('DI_APP_SERVER_REQUEST_PATH', DI_APP_SERVER_PATH . '/Request');
 		defined('DI_APP_SERVER_SERVICE_PATH') or define('DI_APP_SERVER_SERVICE_PATH', DI_APP_SERVER_PATH . '/Service');
 		defined('DI_APP_SERVER_TICKER_PATH') or define('DI_APP_SERVER_TICKER_PATH', DI_APP_SERVER_PATH . '/Ticker');
-		defined('DI_APP_SERVER_TEMP_PATH') or define('DI_APP_SERVER_TEMP_PATH', DI_APP_SERVER_PATH . '/Runtime/Temp');
+		defined('DI_APP_SERVER_TEMP_PATH') or define('DI_APP_SERVER_TEMP_PATH', DI_APP_SERVER_PATH . '/Runtimes/Temp');
 
 		//Worker级
 		defined('DI_APP_SERVER_WORKER_PATH') or define('DI_APP_SERVER_WORKER_PATH', DI_APP_SERVER_PATH . '/Worker');

@@ -6,6 +6,10 @@ use DIServer\Services\Service as Service;
 
 /**
  * 启动设定抽象类（默认向启动器注入当前应用）
+ * Bootstrap被视作一种特殊的Service
+ * 它会在Application正式启动前被调用以初始化一些环境和配置
+ * Bootstrap对象是一次性的工具，不会常驻内存
+ * 也不会被reload命令重载。
  *
  * @author Back
  */
@@ -24,6 +28,6 @@ abstract class Bootstrap extends Service
 
 	public function AfterBootstrap()
 	{
-		var_dump(get_class($this) . " was booted");
+		//echo(get_class($this) . " was booted" . PHP_EOL);
 	}
 }

@@ -12,24 +12,26 @@ class RegisterServices extends Bootstrap
 {
 	public function Bootstrap()
 	{
-		$this->loadService();
+
+		/** @var array $serviceConfig */
+		$servicesConfig = include DI_REGISTRY_PATH . '/Server.php';
+		$this->loadService($servicesConfig);
 		$this->setAlias();
 	}
 
-	/**
-	 * @throws \DIServer\Container\NotExistException
-	 * @throws \DIServer\Container\RegistedException
-	 */
-	protected function loadService()
+
+	protected function loadService($servicesConfig = [])
 	{
-		/** @var array $serviceConfig */
-		$serviceConfig = include DI_REGISTRY_PATH . '/Server.php';
-		foreach($serviceConfig as $iface => $imp)
+		foreach($servicesConfig as $iface => $imp)
 		{
-			$this->getApp()->RegisterClass($imp);
-			if($this->getApp()->IsAbstract($iface))
+			$this->getApp()
+			     ->RegisterClass($imp);
+			if($this->getApp()
+			        ->IsAbstract($iface)
+			)
 			{
-				$this->getApp()->RegisterInterfaceByClass($iface, $imp);
+				$this->getApp()
+				     ->RegisterInterfaceByClass($iface, $imp);
 			}
 		}
 	}
