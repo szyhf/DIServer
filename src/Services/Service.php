@@ -6,7 +6,7 @@ use \DIServer\Interfaces\IApplication as IApplication;
 use DIServer\Interfaces\Services\IService;
 
 /**
- * Description of Service
+ * 服务组件抽象类，所有的组件都继承自它。
  *
  * @author Back
  */
@@ -34,7 +34,7 @@ abstract class Service implements IService
 	 */
 	public function Register()
 	{
-
+		echo "Service register ".get_class($this)."\n";
 	}
 
 	/**
@@ -50,7 +50,7 @@ abstract class Service implements IService
 	/**
 	 * @param \DIServer\Interfaces\IApplication $app
 	 */
-	protected function setApp(Application $app)
+	protected function setApp(IApplication $app)
 	{
 		$this->app = $app;
 	}
