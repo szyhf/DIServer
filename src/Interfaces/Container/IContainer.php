@@ -203,4 +203,11 @@ interface IContainer extends \ArrayAccess
 	 * @return boolean
 	 */
 	public function IsAbstract($abstract);
+
+	/**
+	 * 设置默认实例
+	 *
+	 * @param \DIServer\Interfaces\Container\IContainer $container
+	 */
+	public static function SetInstance(IContainer $container);
 }

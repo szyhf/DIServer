@@ -1,8 +1,10 @@
 <?php
 namespace DIServer\Swoole;
 
+use DIServer\Bootstraps\BootException;
 use DIServer\Interfaces\Swoole\IWorkerServer as IWorkerServer;
 use DIServer\Services\Service as Service;
+use DIServer\Interfaces\Log\ILog;
 
 /**
  * Description of WorkerServer
@@ -20,7 +22,21 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnConnect(\swoole_server $server, $fd, $from_id)
 	{
-
+		$connectInfo = $server->connection_info($fd, $from_id);
+		echo "Connect from {$connectInfo['remote_ip']}[{$fd}].\n";
+		session_id($fd);
+		session_start();
+		session_unset();
+		$_SESSION["0a"] = 'NOOPPPPPP';
+		$_SESSION["a0"] = 'NOOPPPPPP';
+		$_SESSION["aaabbb"] = 'NOOPP65535';
+		session_commit();
+		session_id($fd);
+		session_start();
+		//$_SESSION = $connectInfo;
+		//$_SESSION['wtf2'] = $connectInfo;
+		//var_dump($_SESSION);
+		session_commit();
 	}
 
 	/**
@@ -32,7 +48,13 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnClose(\swoole_server $server, $fd, $from_id)
 	{
-
+		$connectInfo = $server->connection_info($fd, $from_id);
+		echo "Close from {$connectInfo['remote_ip']}[{$fd}].\n";
+		session_id($fd);
+		session_start();
+		$_SESSION = [];
+		session_unset();
+		session_destroy();
 	}
 
 	/**
@@ -45,7 +67,13 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnReceive(\swoole_server $server, $fd, $from_id, $data)
 	{
-
+		echo "Receive from {$fd}.\n";
+		session_id($fd);
+		session_start();
+		$_SESSION["wtf3"] = 'NOOOOO';
+		//var_dump($_SESSION);
+		session_commit();
+		$server->task($fd);
 	}
 
 	/**
@@ -69,6 +97,25 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnWorkerStart(\swoole_server $server, $worker_id)
 	{
 		echo("On Worker[$worker_id] Start." . PHP_EOL);
+		$workerStrapps = include $this->getApp()
+		                              ->GetFrameworkPath() . '/Config/WorkerBootstraps.php';
+		foreach($workerStrapps as $iface => $imp)
+		{
+			try
+			{
+				$this->getApp()
+				     ->RegisterClass($imp);
+				$this->getApp()
+				     ->RegisterInterfaceByClass($iface, $imp);
+				$this->getApp()
+				     ->GetInstance($iface)
+				     ->Register();
+			}
+			catch(BootException $ex)
+			{
+				echo "WorkerStraps Failed\n";
+			}
+		}
 	}
 
 	/**

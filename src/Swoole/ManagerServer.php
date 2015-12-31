@@ -17,6 +17,7 @@ class ManagerServer extends Service implements IManagerServer
 	{
 		//Log('Server Start');
 		echo("OnManagerStart" . PHP_EOL);
+		//如果使用FileSession，应把Runtime目录清空。
 	}
 
 	public function OnManagerStop(\swoole_server $server)

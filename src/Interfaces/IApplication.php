@@ -13,5 +13,39 @@ use DIServer\Interfaces\Container\IContainer;
 
 interface IApplication extends IContainer
 {
-	
+
+	/**
+	 * 应用程序目录
+	 *
+	 * @return string
+	 */
+	public function GetBasePath();
+
+	/**
+	 * 应用程序目录
+	 *
+	 * @return string
+	 */
+	public function GetServerPath();
+
+	/**
+	 * 获取DIServer框架目录
+	 *
+	 * @return string
+	 */
+	public function GetFrameworkPath();
+
+	/**
+	 * 获取服务名称
+	 *
+	 * @return string
+	 */
+	public function GetServerName();
+
+	/**
+	 * 启动应用程序
+	 */
+	public function Start();
+
+
 }

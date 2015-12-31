@@ -10,6 +10,7 @@ namespace DIServer\Swoole;
 
 use DIServer\Interfaces\Swoole\ITaskServer as ITaskServer;
 use DIServer\Services\Service as Service;
+
 /**
  * Description of TaskServer
  *
@@ -17,6 +18,11 @@ use DIServer\Services\Service as Service;
  */
 class TaskServer extends Service implements ITaskServer
 {
+	public function __construct(\DIServer\Interfaces\IApplication $app)
+	{
+		parent::__construct($app);
+		echo "Task server init236544884\n";
+	}
 
 	/**
 	 * 进程启动时被触发
@@ -27,6 +33,25 @@ class TaskServer extends Service implements ITaskServer
 	public function OnTaskWorkerStart(\swoole_server $server, $task_worker_id)
 	{
 		echo("TaskWorker[$task_worker_id] start" . PHP_EOL);
+		$workerStrapps = include $this->getApp()
+		                              ->GetFrameworkPath() . '/Config/WorkerBootstraps.php';
+		foreach($workerStrapps as $iface => $imp)
+		{
+			try
+			{
+				$this->getApp()
+				     ->RegisterClass($imp);
+				$this->getApp()
+				     ->RegisterInterfaceByClass($iface, $imp);
+				$this->getApp()
+				     ->GetInstance($iface)
+				     ->Register();
+			}
+			catch(BootException $ex)
+			{
+				echo "WorkerStraps Failed\n";
+			}
+		}
 	}
 
 	/**
@@ -63,7 +88,12 @@ class TaskServer extends Service implements ITaskServer
 	 */
 	public function OnTask(\swoole_server $server, $task_id, $from_id, $param)
 	{
-
+		echo "Task accept." . $param . PHP_EOL;
+		$fd = $param;
+		session_id($fd);
+		session_start();
+		var_dump($_SESSION);
+		//session_abort();
 	}
 
 }
