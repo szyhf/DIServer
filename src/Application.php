@@ -6,6 +6,7 @@ namespace DIServer
 	use DIServer\Container\Container as Container;
 	use DIServer\Interfaces\IApplication;
 	use \DIServer\Interfaces\Bootstraps\IBootstrapper;
+
 	/**
 	 * 主程序
 	 *
@@ -25,6 +26,8 @@ namespace DIServer
 		 */
 		protected $frameworkPath;
 
+		protected $serverPath;
+
 		/**
 		 * Application的构造函数
 		 *
@@ -33,6 +36,7 @@ namespace DIServer
 		public function __construct($basePath)
 		{
 			parent::__construct();
+			static::SetInstance($this);
 			if($basePath)
 			{
 				$this->setBasePath($basePath);
@@ -104,7 +108,8 @@ namespace DIServer
 		protected function bindCoreAliases()
 		{
 			$alias = [
-				'App' => get_class($this), 'Swoole' => \swoole_server::class
+				'App'    => get_class($this),
+				'Swoole' => \swoole_server::class
 			];
 			foreach($alias as $alia => $type)
 			{
@@ -119,16 +124,14 @@ namespace DIServer
 		 */
 		public function Start()
 		{
-
-		}
-
-		public function boot()
-		{
 			/* @var $bootstrapper \DIServer\Interfaces\Bootstraps\IBootstrapper */
 			$bootstrapper = $this->GetInstance(IBootstrapper::class);
 			$bootstrapper->Boot();
 		}
 
+		/**
+		 * @return string
+		 */
 		public function GetBasePath()
 		{
 			return $this->basePath;
@@ -144,10 +147,29 @@ namespace DIServer
 		public function SetBasePath($basePath)
 		{
 			$this->basePath = realpath(rtrim($basePath, '\/'));
+			$this->serverPath = $this->GetBasePath() . '/app/' . $this->GetServerName();
 
 			return $this;
 		}
 
+		/**
+		 * 获取服务名称
+		 *
+		 * @return string
+		 */
+		public function GetServerName()
+		{
+			return DI_SERVER_NAME;
+		}
 
+		/**
+		 * 应用程序目录
+		 *
+		 * @return string
+		 */
+		public function GetServerPath()
+		{
+			return $this->serverPath;
+		}
 	}
 }
