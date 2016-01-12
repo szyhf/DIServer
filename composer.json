@@ -1,35 +1,38 @@
 {
-    "name": "diserver/framework",
-    "description": "The DIServer Framework.",
-    "keywords": ["framework", "DIServer", "swoole"],
-    "license": "Apache2",
-    "homepage": "https://github.com/szyhf/DIServer",
-    "support": {
-        "issues": "https://github.com/szyhf/DIServer/wiki",
-        "source": "https://github.com/szyhf/DIServer"
-    },
-    "authors": [
-        {
-            "name": "Back Yu",
-            "email": "yhf_szb@163.com"
-        }
-    ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/szyhf/thinkphp.git"
-        }
-    ],
-    "require": {
-        "php": ">=5.5.9",
-        "ext-swoole": ">=1.7.20",
-        "psr/log": "~1.0",
-        "monolog/monolog": "~1.11",
-        "vlucas/phpdotenv":">=2.1.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "DIServer\\": "src/"
-        }
+  "name": "diserver/framework",
+  "description": "The DIServer Framework.",
+  "keywords": [
+    "framework",
+    "DIServer",
+    "swoole"
+  ],
+  "license": "Apache2",
+  "homepage": "https://github.com/szyhf/DIServer",
+  "support": {
+    "issues": "https://github.com/szyhf/DIServer/wiki",
+    "source": "https://github.com/szyhf/DIServer"
+  },
+  "authors": [
+    {
+      "name": "Back Yu",
+      "email": "yhf_szb@163.com"
     }
+  ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/szyhf/thinkphp.git"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "ext-swoole": ">=1.7.20",
+    "psr/log": "~1.0",
+    "symfony/finder": "~2.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "DIServer\\": "src/"
+    }
+  }
 }
