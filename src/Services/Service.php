@@ -34,7 +34,7 @@ abstract class Service implements IService
 	 */
 	public function Register()
 	{
-		echo "Service register ".get_class($this)."\n";
+		//echo "Service register " . get_class($this) . "\n";
 	}
 
 	/**
@@ -55,4 +55,13 @@ abstract class Service implements IService
 		$this->app = $app;
 	}
 
+	/**
+	 * 倒置单例的调用方法，提供简易入口。
+	 * @return Service
+	 */
+	public static function Instance($key = null)
+	{
+		return \DIServer\Container\Container::Instance()
+		                ->GetInstance(static::class, $key);
+	}
 }

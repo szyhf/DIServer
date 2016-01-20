@@ -1,7 +1,8 @@
 <?php
 
 namespace DIServer\Container;
-use DIServer\Interfaces\Container\IContainer;
+
+use DIServer\Interfaces\IContainer;
 
 /**
  * IOC容器类
@@ -114,6 +115,16 @@ class Container implements IContainer
 		}
 
 		return static::$defaultIOC;
+	}
+
+	/**
+	 * 设置默认实例
+	 *
+	 * @param \DIServer\Interfaces\IContainer $container
+	 */
+	public static function SetInstance(IContainer $container)
+	{
+		static::$defaultIOC = $container;
 	}
 
 	/**
@@ -785,7 +796,7 @@ class Container implements IContainer
 	 */
 	public function RegisterInterfaceByFactory($interface, \Closure $factory, array $factoryParams = [], $key = null)
 	{
-		if($this->isAbstract($interface))
+		if(!$this->isAbstract($interface))
 		{
 			throw new NotExistException($interface, $key);
 		}
@@ -834,7 +845,7 @@ class Container implements IContainer
 	 */
 	public function RegisterInterfaceByInstance($interface, $instance, $key = null)
 	{
-		if($this->isAbstract($interface))
+		if(!$this->isAbstract($interface))
 		{
 			throw new NotExistException($interface, $key);
 		}
@@ -854,6 +865,7 @@ class Container implements IContainer
 
 			$this->registries[$interface][$key] = true;
 			$this->instances[$interface][$key] = $instance;
+			$this->implemented[$interface][$key] = true;
 		}
 	}
 
@@ -958,40 +970,61 @@ class Container implements IContainer
 		$type = $this->normalizeType($type);
 		$key = $this->normalizeKey($key);
 
-		unset($this->factorys[$type][$key]);
-		if(!count($this->factorys[$type]))
-		{
-			unset($this->factorys[$type]);
-		}
+		$this->unregisterTypeByKey($this->factorys, $type, $key);
+		$this->unregisterTypeByKey($this->implemented, $type, $key);
+		$this->unregisterTypeByKey($this->instances, $type, $key);
+		$this->unregisterTypeByKey($this->interfaces, $type, $key);
+		$this->unregisterTypeByKey($this->registries, $type, $key);
+		$this->unregisterTypeByKey($this->selfParams, $type, $key);
 
-		unset($this->implemented[$type][$key]);
-		if(!count($this->implemented[$type]))
-		{
-			unset($this->implemented[$type]);
-		}
 
-		unset($this->instances[$type][$key]);
-		if(!count($this->instances[$type]))
-		{
-			unset($this->instances[$type]);
-		}
+		//unset($this->implemented[$type][$key]);
+		//if(isset($this->implemented[$type]))
+		//{
+		//	if(!count($this->implemented[$type]))
+		//	{
+		//		unset($this->implemented[$type]);
+		//	}
+		//}
+		//
+		//unset($this->instances[$type][$key]);
+		//if(isset($this->instances[$type]))
+		//{
+		//	if(!count($this->instances[$type]))
+		//	{
+		//		unset($this->instances[$type]);
+		//	}
+		//}
+		//
+		//unset($this->interfaces[$type][$key]);
+		//
+		//if(!count($this->interfaces[$type]))
+		//{
+		//	unset($this->interfaces[$type]);
+		//}
+		//
+		//unset($this->registries[$type][$key]);
+		//if(!count($this->registries[$type]))
+		//{
+		//	unset($this->registries[$type]);
+		//}
+		//
+		//unset($this->selfParams[$type][$key]);
+		//if(!count($this->selfParams[$type]))
+		//{
+		//	unset($this->selfParams[$type]);
+		//}
+	}
 
-		unset($this->interfaces[$type][$key]);
-		if(!count($this->interfaces[$type]))
+	protected function unregisterTypeByKey(&$ary, $type, $key)
+	{
+		unset($ary[$type][$key]);
+		if(isset($ary[$type]))
 		{
-			unset($this->interfaces[$type]);
-		}
-
-		unset($this->registries[$type][$key]);
-		if(!count($this->registries[$type]))
-		{
-			unset($this->registries[$type]);
-		}
-
-		unset($this->selfParams[$type][$key]);
-		if(!count($this->selfParams[$type]))
-		{
-			unset($this->selfParams[$type]);
+			if(!count($ary[$type]))
+			{
+				unset($ary[$type]);
+			}
 		}
 	}
 

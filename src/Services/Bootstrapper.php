@@ -5,15 +5,32 @@ namespace DIServer\Services
 	class Bootstrapper extends Service
 	{
 
-		protected $bootstraps;
-
+		/**
+		 * 执行启动器
+		 */
 		public function Boot()
 		{
-			$this->bootstraps = include __DIR__ . '/../Config/Bootstrap.php';
-			foreach($this->bootstraps as $boot)
+			$bootstraps = $this->initBootstraps();
+			$this->bootWithBootstraps($bootstraps);
+		}
+
+		protected function initBootstraps()
+		{
+			/**
+			 * DIServer默认启动器配置目录。
+			 */
+			return include $this->getApp()
+			                    ->GetFrameworkPath() . '/Config/Bootstrap.php';
+		}
+
+		protected function bootWithBootstraps(array $bootstraps = [])
+		{
+			foreach($bootstraps as $boot)
 			{
 				/* @var $bootstrap \DIServer\Bootstraps\Bootstrap */
-				$bootstrap = $this->getApp()->BuildWithClass($boot);
+				$bootstrap = $this->getApp()
+				                  ->BuildWithClass($boot);
+				$bootstrap->Register();
 				$bootstrap->BeforeBootstrap();
 				$bootstrap->Bootstrap();
 				$bootstrap->AfterBootstrap();
