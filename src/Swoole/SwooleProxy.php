@@ -44,12 +44,9 @@ class SwooleProxy extends Service implements ISwooleProxy
 	 */
 	protected $taskServer;
 
-	public function Register()
+	public function __construct(\DIServer\Interfaces\IApplication $app,\swoole_server $server)
 	{
-		parent::Register();
-		/* @var $server \swoole_server */
-		$server = $this->getApp()
-		               ->GetInstance(\swoole_server::class);
+		parent::__construct($app);
 		$server->on("start", [$this, 'OnStart']);
 		$server->on("connect", [$this, 'OnConnect']);
 		$server->on("receive", [$this, 'OnReceive']);
@@ -102,9 +99,22 @@ class SwooleProxy extends Service implements ISwooleProxy
 		$this->workerServer->OnPacket($server, $data, $client_info);
 	}
 
+	/**
+	 * 工作进程间通讯回调（划分Task进程和Worker进程）
+	 * @param \swoole_server $server
+	 * @param                $from_worker_id
+	 * @param                $message
+	 */
 	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message)
 	{
-		$this->workerServer->OnPipeMessage($server, $from_worker_id, $message);
+		if($server->taskworker)
+		{
+			$this->taskServer->OnPipeMessage($server, $from_worker_id, $message);
+		}
+		else
+		{
+			$this->workerServer->OnPipeMessage($server, $from_worker_id, $message);
+		}
 	}
 
 	public function OnReceive(\swoole_server $server, $fd, $from_id, $data)
@@ -159,7 +169,7 @@ class SwooleProxy extends Service implements ISwooleProxy
 		     ->Unregister(\swoole_server::class);
 		$this->getApp()
 		     ->RegisterClassByInstance(\swoole_server::class, $server);
-		$reloadConfig = include DI_REGISTRY_PATH . '/ServerReload.php';
+		$reloadConfig = include $this->getApp()->GetFrameworkPath() . '/Registry/ServerReload.php';
 		foreach($reloadConfig as $iface => $imp)
 		{
 			$this->getApp()

@@ -1,10 +1,15 @@
 <?php
 namespace DIServer\Swoole;
 
-use DIServer\Bootstraps\BootException;
-use DIServer\Interfaces\Swoole\IWorkerServer as IWorkerServer;
-use DIServer\Services\Service as Service;
-use DIServer\Interfaces\Log\ILog;
+use DIServer\Handler\Handler;
+use DIServer\Interfaces\Swoole\IWorkerServer;
+use DIServer\Interfaces\IRequest;
+use DIServer\Services\Dispatcher;
+use DIServer\Services\HandlerManager;
+use DIServer\Services\Log;
+use DIServer\Services\RequestFactory;
+use DIServer\Services\Service;
+use DIServer\Services\Session;
 
 /**
  * Description of WorkerServer
@@ -13,6 +18,8 @@ use DIServer\Interfaces\Log\ILog;
  */
 class WorkerServer extends Service implements IWorkerServer
 {
+	protected $dispatcher;
+
 	/**
 	 * 新建了一个Tcp连接时触发
 	 *
@@ -23,20 +30,7 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnConnect(\swoole_server $server, $fd, $from_id)
 	{
 		$connectInfo = $server->connection_info($fd, $from_id);
-		echo "Connect from {$connectInfo['remote_ip']}[{$fd}].\n";
-		session_id($fd);
-		session_start();
-		session_unset();
-		$_SESSION["0a"] = 'NOOPPPPPP';
-		$_SESSION["a0"] = 'NOOPPPPPP';
-		$_SESSION["aaabbb"] = 'NOOPP65535';
-		session_commit();
-		session_id($fd);
-		session_start();
-		//$_SESSION = $connectInfo;
-		//$_SESSION['wtf2'] = $connectInfo;
-		//var_dump($_SESSION);
-		session_commit();
+		Log::Info("Connect from {remote_ip}[$fd]", $connectInfo);
 	}
 
 	/**
@@ -49,12 +43,7 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnClose(\swoole_server $server, $fd, $from_id)
 	{
 		$connectInfo = $server->connection_info($fd, $from_id);
-		echo "Close from {$connectInfo['remote_ip']}[{$fd}].\n";
-		session_id($fd);
-		session_start();
-		$_SESSION = [];
-		session_unset();
-		session_destroy();
+		Log::Info("Close from {remote_ip}[$fd]", $connectInfo);
 	}
 
 	/**
@@ -67,13 +56,9 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnReceive(\swoole_server $server, $fd, $from_id, $data)
 	{
-		echo "Receive from {$fd}.\n";
-		session_id($fd);
-		session_start();
-		$_SESSION["wtf3"] = 'NOOOOO';
-		//var_dump($_SESSION);
-		session_commit();
-		$server->task($fd);
+		/** @var IRequest $request */
+		$request = RequestFactory::Make($fd, $from_id, $data);
+		Dispatcher::Dispatch($request);
 	}
 
 	/**
@@ -96,9 +81,9 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnWorkerStart(\swoole_server $server, $worker_id)
 	{
-		echo("On Worker[$worker_id] Start." . PHP_EOL);
+		Log::Notice("On Worker[$worker_id] Start.");
 		$workerStrapps = include $this->getApp()
-		                              ->GetFrameworkPath() . '/Config/WorkerBootstraps.php';
+		                              ->GetFrameworkPath() . '/Registry/Worker.php';
 		foreach($workerStrapps as $iface => $imp)
 		{
 			try
@@ -107,15 +92,19 @@ class WorkerServer extends Service implements IWorkerServer
 				     ->RegisterClass($imp);
 				$this->getApp()
 				     ->RegisterInterfaceByClass($iface, $imp);
-				$this->getApp()
-				     ->GetInstance($iface)
-				     ->Register();
 			}
 			catch(BootException $ex)
 			{
-				echo "WorkerStraps Failed\n";
+				Log::Warning("Register workerstrap[{$iface}=>{$imp}] failed.");
 			}
 		}
+
+		$this->getApp()
+		     ->RegisterClass(HandlerManager::class);
+		$this->getApp()
+		     ->RegisterClass(Dispatcher::class);
+		$this->getApp()
+		     ->RegisterClass(Session::class);
 	}
 
 	/**
@@ -139,7 +128,7 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnWorkerStop(\swoole_server $server, $worker_id)
 	{
-		echo("On Worker[$worker_id] Stop." . PHP_EOL);
+		Log::Notice("On Worker[$worker_id] Stop.");
 	}
 
 	/**

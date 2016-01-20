@@ -1,8 +1,5 @@
 <?php
-namespace DIServer\Bootstraps;
-
-use DIServer\Application as Application;
-use DIServer\Services\Service as Service;
+namespace DIServer\Services;
 
 /**
  * 启动设定抽象类（默认向启动器注入当前应用）
@@ -29,5 +26,11 @@ abstract class Bootstrap extends Service
 	public function AfterBootstrap()
 	{
 		//echo(get_class($this) . " was booted" . PHP_EOL);
+	}
+
+	public function Register()
+	{
+		//覆写父类的注册函数
+		//启动器是一次性对象，不用注册
 	}
 }

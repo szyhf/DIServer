@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-namespace DIServer\Interfaces\Bootstraps;
+namespace DIServer\Interfaces;
 
 /**
  * @author Back

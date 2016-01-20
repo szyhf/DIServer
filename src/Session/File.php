@@ -6,13 +6,13 @@
  * Time: 14:22
  */
 
-namespace DIServer\Session\Driver;
+namespace DIServer\Session;
 
 use DIServer\Interfaces\IApplication;
-use DIServer\Session\Session;
+use DIServer\Services\Session;
 use Symfony\Component\Finder\Finder;
 
-class File extends Session
+class File //extends Session
 {
 	/**
 	 * @var
@@ -69,7 +69,7 @@ class File extends Session
 	public function destroy($session_id)
 	{
 		// TODO: Implement destroy() method.
-		echo "Destory $session_id";
+		//echo "Destory $session_id|n";
 		//
 		//return true;
 
@@ -151,7 +151,7 @@ class File extends Session
 	public function read($session_id)
 	{
 		// TODO: Implement read() method.
-		echo "Session read $this->path/$session_id\n";
+		//echo "Session read $this->path/$session_id\n";
 		if(file_exists($this->path . "/$session_id"))
 		{
 			return file_get_contents($this->path . "/$session_id");
@@ -184,7 +184,7 @@ class File extends Session
 	public function write($session_id, $session_data)
 	{
 		// TODO: Implement write() method.
-		echo "Session write $this->path/$session_id >> $session_data\n";
+		//echo "Session write $this->path/$session_id >> $session_data\n";
 		return file_put_contents($this->path . "/$session_id", $session_data, LOCK_EX);
 	}
 }

@@ -36,7 +36,7 @@ return [
 	'ssl_cert_file'            => '', //设置SSL隧道加密，设置值为一个文件名字符串，制定cert证书和key的路径。
 	'user'                     => '', //设置worker/task子进程的所属用户。
 	'group'                    => '', //设置worker/task子进程的进程用户组。
-	'chroot'                   => DI_APP_PATH, //重定向Worker进程的文件系统根目录。
+	//'chroot'                   => DI_APP_PATH, //重定向Worker进程的文件系统根目录（会影响autoloader，慎用）
 	'pipe_buffer_size'         => '', //调整管道通信的内存缓存区长度,在1.7.17以上版本默认为32M
 	'buffer_output_size'       => 1024 * 1024 * 10, //调整连接发送缓存区的大小。
 	'enable_unsafe_event'      => false,

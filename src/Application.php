@@ -5,7 +5,7 @@ namespace DIServer
 
 	use DIServer\Container\Container as Container;
 	use DIServer\Interfaces\IApplication;
-	use \DIServer\Interfaces\Bootstraps\IBootstrapper;
+	use \DIServer\Interfaces\IBootstrapper;
 
 	/**
 	 * 主程序
@@ -22,10 +22,22 @@ namespace DIServer
 		protected $basePath;
 
 		/**
+		 * 公共目录
+		 *
+		 * @var string
+		 */
+		protected $commonPath;
+
+		/**
 		 * @var string
 		 */
 		protected $frameworkPath;
 
+		/**
+		 * 服务目录
+		 *
+		 * @var string
+		 */
 		protected $serverPath;
 
 		/**
@@ -55,10 +67,22 @@ namespace DIServer
 
 		protected function bindBaseService()
 		{
-			//echo ($this->GetFrameworkPath() . '/Registry/Base.php') . "\n";
-			$baseServices = include $this->GetFrameworkPath() . '/Registry/Base.php';
-			//var_dump($baseServices);
-			foreach($baseServices as $iface => $serv)
+			$baseServices = include $this->GetFrameworkPath() . '/Registry/Application.php';
+			$this->bindService($baseServices);
+		}
+
+		/**
+		 * 根据数组[$iface=>$class]快速绑定服务的快捷方法
+		 * 若未提供$iface则会仅注册$class
+		 *
+		 * @param array $iface2service
+		 *
+		 * @throws \DIServer\Container\NotExistException
+		 * @throws \DIServer\Container\RegistedException
+		 */
+		protected function bindService(array $iface2service)
+		{
+			foreach($iface2service as $iface => $serv)
 			{
 				if(class_exists($serv))
 				{
@@ -70,12 +94,9 @@ namespace DIServer
 				}
 				else
 				{
-					echo "Base service $serv is not exist.\n";
+					echo "Bind service [$iface]=>[$serv] is not exist.\n";
 				}
 			}
-			//$this->RegisterClass(Bootstrapper::class);
-			//$this->RegisterInterfaceByClass(IBootstrapper::class, Bootstrapper::class);
-			//$this->RegisterClass(\DIServer\Services\SwooleProxy::class);
 		}
 
 		/**
@@ -124,8 +145,8 @@ namespace DIServer
 		 */
 		public function Start()
 		{
-			/* @var $bootstrapper \DIServer\Interfaces\Bootstraps\IBootstrapper */
-			$bootstrapper = $this->GetInstance(IBootstrapper::class);
+			/* @var $bootstrapper \DIServer\Interfaces\IBootstrapper */
+			$bootstrapper = $this->__get(IBootstrapper::class);
 			$bootstrapper->Boot();
 		}
 
@@ -148,6 +169,7 @@ namespace DIServer
 		{
 			$this->basePath = realpath(rtrim($basePath, '\/'));
 			$this->serverPath = $this->GetBasePath() . '/app/' . $this->GetServerName();
+			$this->commonPath = $this->GetBasePath() . '/app/Common';
 
 			return $this;
 		}
@@ -170,6 +192,24 @@ namespace DIServer
 		public function GetServerPath()
 		{
 			return $this->serverPath;
+		}
+
+		public function GetCommonPath()
+		{
+			return $this->commonPath;
+		}
+
+		public function  __get($name)
+		{
+			//快速访问已经注册的单例
+			if($this->IsRegistered($name))
+			{
+				return $this->GetInstance($name);
+			}
+			else
+			{
+				return null;
+			}
 		}
 	}
 }

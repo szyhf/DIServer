@@ -1,7 +1,7 @@
 <?php
 
 namespace DIServer\Bootstraps;
-
+use DIServer\Services\Bootstrap;
 /**
  * 生成环境变量
  *

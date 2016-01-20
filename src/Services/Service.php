@@ -2,8 +2,8 @@
 
 namespace DIServer\Services;
 
-use \DIServer\Interfaces\IApplication as IApplication;
-use DIServer\Interfaces\Services\IService;
+use \DIServer\Interfaces\IApplication;
+use DIServer\Interfaces\IService;
 
 /**
  * 服务组件抽象类，所有的组件都继承自它。
@@ -29,13 +29,21 @@ abstract class Service implements IService
 		$this->setApp($app);
 	}
 
-	/**
-	 * 注册当前服务
-	 */
-	public function Register()
-	{
-		//echo "Service register " . get_class($this) . "\n";
-	}
+	///**
+	// * 注册当前服务
+	// */
+	//public function Register()
+	//{
+	//	//echo "Service register " . get_class($this) . "\n";
+	//	if(!$this->getApp()
+	//	         ->IsRegistered(get_class($this))
+	//	)
+	//	{
+	//		//echo "Auto register service {".get_class($this)."}\n";
+	//		$this->getApp()
+	//		     ->RegisterClass(get_class($this));
+	//	}
+	//}
 
 	/**
 	 * 获取当前主程
@@ -57,11 +65,12 @@ abstract class Service implements IService
 
 	/**
 	 * 倒置单例的调用方法，提供简易入口。
+	 *
 	 * @return Service
 	 */
 	public static function Instance($key = null)
 	{
 		return \DIServer\Container\Container::Instance()
-		                ->GetInstance(static::class, $key);
+		                                    ->GetInstance(static::class, $key);
 	}
 }

@@ -7,7 +7,7 @@
  */
 
 namespace DIServer\Bootstraps;
-
+use DIServer\Services\Bootstrap;
 class RegisterServices extends Bootstrap
 {
 	public function Bootstrap()

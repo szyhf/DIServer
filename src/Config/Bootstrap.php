@@ -1,10 +1,10 @@
 <?php
-//控制启动器的加载及加载顺序
+//主进程控制启动器的加载及加载顺序
 return [
-    \DIServer\Bootstraps\CheckEnvironment::class,
-    \DIServer\Bootstraps\DetectEnvironment::class,
-	\DIServer\Bootstraps\LoadBaseConfig::class,
-    \DIServer\Bootstraps\InitLogging::class,
+	\DIServer\Bootstraps\CheckEnvironment::class,
+	\DIServer\Bootstraps\DetectEnvironment::class,
+	//\DIServer\Bootstraps\AutoBuilder::class,
 	\DIServer\Bootstraps\RegisterServices::class,
-    \DIServer\Bootstraps\InitSwooleServer::class,
+	\DIServer\Bootstraps\InitLogging::class,
+	\DIServer\Bootstraps\InitSwooleServer::class,
 ];

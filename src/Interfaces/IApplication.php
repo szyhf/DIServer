@@ -8,9 +8,6 @@
 
 namespace DIServer\Interfaces;
 
-
-use DIServer\Interfaces\Container\IContainer;
-
 interface IApplication extends IContainer
 {
 
@@ -41,6 +38,13 @@ interface IApplication extends IContainer
 	 * @return string
 	 */
 	public function GetServerName();
+
+	/**
+	 * 获取公共目录路径
+	 *
+	 * @return string
+	 */
+	public function GetCommonPath();
 
 	/**
 	 * 启动应用程序

@@ -6,7 +6,7 @@
  * Time: 19:30
  */
 
-namespace DIServer\Interfaces\Container;
+namespace DIServer\Interfaces;
 
 
 interface IContainer extends \ArrayAccess
@@ -207,7 +207,7 @@ interface IContainer extends \ArrayAccess
 	/**
 	 * 设置默认实例
 	 *
-	 * @param \DIServer\Interfaces\Container\IContainer $container
+	 * @param \DIServer\Interfaces\IContainer $container
 	 */
 	public static function SetInstance(IContainer $container);
 }

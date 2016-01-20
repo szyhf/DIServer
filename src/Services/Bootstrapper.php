@@ -2,9 +2,14 @@
 
 namespace DIServer\Services
 {
+	/**
+	 * 启动器管理器
+	 * （按配置加载并依序启动启动器）
+	 *
+	 * @package DIServer\Services
+	 */
 	class Bootstrapper extends Service
 	{
-
 		/**
 		 * 执行启动器
 		 */

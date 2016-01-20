@@ -1,5 +1,5 @@
 <?php
-namespace DIServer\Interfaces\Log;
+namespace DIServer\Interfaces;
 
 /**
  * Interface ILog（来自Psr-3标准）
@@ -15,7 +15,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Emergency($message, array $context = []);
 
@@ -26,7 +26,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Alert($message, array $context = []);
 
@@ -37,7 +37,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Critical($message, array $context = []);
 
@@ -47,7 +47,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Error($message, array $context = []);
 
@@ -58,7 +58,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Warning($message, array $context = []);
 
@@ -68,7 +68,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Notice($message, array $context = []);
 
@@ -79,7 +79,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Info($message, array $context = []);
 
@@ -89,7 +89,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Debug($message, array $context = []);
 
@@ -100,7 +100,7 @@ interface ILog
 	 * @param string $message
 	 * @param array  $context
 	 *
-	 * @return null
+	 * @return ILog
 	 */
 	public function Log($level, $message, array $context = []);
 }

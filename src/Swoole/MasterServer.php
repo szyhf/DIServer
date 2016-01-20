@@ -3,7 +3,9 @@
 namespace DIServer\Swoole;
 
 use DIServer\Interfaces\Swoole\IMasterServer as IMasterServer;
-use DIServer\Services\Service as Service;
+use DIServer\Services\Log;
+use DIServer\Services\Service;
+
 /**
  * Description of MasterServer
  *
@@ -14,12 +16,13 @@ class MasterServer extends Service implements IMasterServer
 
 	public function OnStart(\swoole_server $server)
 	{
-		echo("OnStart" . PHP_EOL);
+		//Log::Notice("On Master Start");
 	}
 
 	public function OnShutdown(\swoole_server $server)
 	{
-		echo("OnShutdown" . PHP_EOL);
+		Log::Instance()
+		   ->Notice("On Master Shutdown");
 	}
 
 }

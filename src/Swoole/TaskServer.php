@@ -9,7 +9,8 @@
 namespace DIServer\Swoole;
 
 use DIServer\Interfaces\Swoole\ITaskServer as ITaskServer;
-use DIServer\Services\Service as Service;
+use DIServer\Services\Log;
+use DIServer\Services\Service;
 
 /**
  * Description of TaskServer
@@ -18,11 +19,6 @@ use DIServer\Services\Service as Service;
  */
 class TaskServer extends Service implements ITaskServer
 {
-	public function __construct(\DIServer\Interfaces\IApplication $app)
-	{
-		parent::__construct($app);
-		echo "Task server init236544884\n";
-	}
 
 	/**
 	 * 进程启动时被触发
@@ -32,26 +28,24 @@ class TaskServer extends Service implements ITaskServer
 	 */
 	public function OnTaskWorkerStart(\swoole_server $server, $task_worker_id)
 	{
-		echo("TaskWorker[$task_worker_id] start" . PHP_EOL);
-		$workerStrapps = include $this->getApp()
-		                              ->GetFrameworkPath() . '/Config/WorkerBootstraps.php';
-		foreach($workerStrapps as $iface => $imp)
-		{
-			try
-			{
-				$this->getApp()
-				     ->RegisterClass($imp);
-				$this->getApp()
-				     ->RegisterInterfaceByClass($iface, $imp);
-				$this->getApp()
-				     ->GetInstance($iface)
-				     ->Register();
-			}
-			catch(BootException $ex)
-			{
-				echo "WorkerStraps Failed\n";
-			}
-		}
+		Log::Notice("On Task Worker[$task_worker_id] Start.");
+		//$workerStrapps = include $this->getApp()
+		//                              ->GetFrameworkPath() . '/Config/Worker.php';
+		//foreach($workerStrapps as $iface => $imp)
+		//{
+		//	try
+		//	{
+		//		$this->getApp()
+		//		     ->RegisterClass($imp);
+		//		$this->getApp()
+		//		     ->RegisterInterfaceByClass($iface, $imp);
+		//	}
+		//	catch(\Exception $ex)
+		//	{
+		//		Log::Instance()
+		//		   ->Warning("Register taskworkerstrap[{$iface}=>{$imp}] failed.");
+		//	}
+		//}
 	}
 
 	/**
@@ -75,7 +69,7 @@ class TaskServer extends Service implements ITaskServer
 	 */
 	public function OnTaskWorkerStop(\swoole_server $server, $task_worker_id)
 	{
-		echo("TaskWorker[$task_worker_id] Stop" . PHP_EOL);
+		Log::Notice("TaskWorker[$task_worker_id] stop");
 	}
 
 	/**
@@ -89,11 +83,17 @@ class TaskServer extends Service implements ITaskServer
 	public function OnTask(\swoole_server $server, $task_id, $from_id, $param)
 	{
 		echo "Task accept." . $param . PHP_EOL;
-		$fd = $param;
-		session_id($fd);
-		session_start();
-		var_dump($_SESSION);
-		//session_abort();
 	}
 
+	/**
+	 * 当工作进程收到由sendMessage发送的管道消息时会触发onPipeMessage
+	 *
+	 * @param \swoole_server $server
+	 * @param int            $from_worker_id
+	 * @param string         $message
+	 */
+	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message)
+	{
+		Log::Notice('On task Pipe Message');
+	}
 }

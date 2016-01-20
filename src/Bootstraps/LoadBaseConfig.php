@@ -7,7 +7,7 @@
  */
 
 namespace DIServer\Bootstraps;
-
+use DIServer\Services\Bootstrap;
 
 class LoadBaseConfig extends Bootstrap
 {

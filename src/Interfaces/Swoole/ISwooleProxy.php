@@ -7,7 +7,7 @@
  */
 
 namespace Diserver\Interfaces\Swoole;
-use DIServer\Interfaces\Services\IService;
+use DIServer\Interfaces\IService;
 
 /**
  *
