@@ -8,12 +8,12 @@
  */
 return [
 	'reactor_num'              => '', //使用的CPU核心数，不设置表示根据机器选择（建议为设置为CPU核数*2）
-	'worker_num'               => 1, //启动的worker进程数（建议设置为CPU的1-4倍最合理）
-	'max_request'              => 1000, //每个Worker处理的最大任务数，超过后会自动重启该Worker（不希望进程自动退出可以设置为0）
+	'worker_num'               => 2, //启动的worker进程数（建议设置为CPU的1-4倍最合理）
+	'max_request'              => 10, //每个Worker处理的最大任务数，超过后会自动重启该Worker（不希望进程自动退出可以设置为0）
 	'max_conn'                 => 65535, //服务器程序，最大允许并发的连接数，不设置表示使用操作系统设置上限（ulimit -n的值），超量的连接会被拒绝。
-	'task_worker_num'          => 1, //配置task进程的数量，配置此参数后将会启用task功能（DIServer必须开启此功能）。
+	'task_worker_num'          => 2, //配置task进程的数量，配置此参数后将会启用task功能（DIServer必须开启此功能）。
 	'task_ipc_mode'            => 2, //设置task进程与worker进程之间通信的方式，1使用unix socket通信，2使用消息队列通信，3使用消息队列通信，并设置为争抢模式
-	'task_max_request'         => 1000, //task进程的最大任务数,不希望进程自动退出可以设置为0
+	'task_max_request'         => 10, //task进程的最大任务数,不希望进程自动退出可以设置为0
 	'task_tmpdir'              => DI_APP_SERVER_TEMP_PATH, //设置task的数据临时目录，在swoole_server中，如果投递的数据超过8192字节，将启用临时文件来保存数据。
 	'dispatch_mode'            => 2, //1轮循模式，2固定模式，3抢占模式，4IP分配，5UID分配。
 	'message_queue_key'        => ftok(DI_APP_SERVER_PATH, 3), //设置消息队列的KEY

@@ -5,6 +5,5 @@ return [
 	\DIServer\Bootstraps\DetectEnvironment::class,
 	//\DIServer\Bootstraps\AutoBuilder::class,
 	\DIServer\Bootstraps\RegisterServices::class,
-	\DIServer\Bootstraps\InitLogging::class,
 	\DIServer\Bootstraps\InitSwooleServer::class,
 ];
