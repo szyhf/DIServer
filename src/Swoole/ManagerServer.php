@@ -16,13 +16,12 @@ class ManagerServer extends Service implements IManagerServer
 
 	public function OnManagerStart(\swoole_server $server)
 	{
-		//Log::Notice("On Manager {Start}",['Start'=>'Begin']);
+		Log::Notice("On Manager Start.");
 	}
 
 	public function OnManagerStop(\swoole_server $server)
 	{
-		//Log::Instance()
-		//   ->Notice("OnManagerStop.");
+		Log::Notice("On Manager Stop");
 	}
 
 }

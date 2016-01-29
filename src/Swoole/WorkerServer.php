@@ -1,12 +1,14 @@
 <?php
 namespace DIServer\Swoole;
 
-use DIServer\Handler\Handler;
+use DIServer\Interfaces\IMonitor;
 use DIServer\Interfaces\Swoole\IWorkerServer;
 use DIServer\Interfaces\IRequest;
 use DIServer\Services\Dispatcher;
+use DIServer\Services\Event;
 use DIServer\Services\HandlerManager;
 use DIServer\Services\Log;
+use DIServer\Services\Monitor;
 use DIServer\Services\RequestFactory;
 use DIServer\Services\Service;
 use DIServer\Services\Session;
@@ -30,7 +32,9 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnConnect(\swoole_server $server, $fd, $from_id)
 	{
 		$connectInfo = $server->connection_info($fd, $from_id);
-		Log::Info("Connect from {remote_ip}[$fd]", $connectInfo);
+		Log::Info("Connect from {remote_ip}[$fd] to worker[$server->worker_id]", $connectInfo);
+
+		Event::Listen('OnConnect', [&$server, &$fd, &$from_id]);
 	}
 
 	/**
@@ -43,7 +47,9 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnClose(\swoole_server $server, $fd, $from_id)
 	{
 		$connectInfo = $server->connection_info($fd, $from_id);
-		Log::Info("Close from {remote_ip}[$fd]", $connectInfo);
+		Log::Info("Close from {remote_ip}[$fd] to worker[$server->worker_id]", $connectInfo);
+
+		Event::Listen('OnClose', [&$server, &$fd, &$from_id]);
 	}
 
 	/**
@@ -59,6 +65,8 @@ class WorkerServer extends Service implements IWorkerServer
 		/** @var IRequest $request */
 		$request = RequestFactory::Make($fd, $from_id, $data);
 		Dispatcher::Dispatch($request);
+
+		Event::Listen('OnReceive', [&$server, &$fd, &$from_id, &$data]);
 	}
 
 	/**
@@ -70,7 +78,7 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnPacket(\swoole_server $server, $data, $client_info)
 	{
-
+		Event::Listen('OnPacket', [&$server, &$data, $client_info]);
 	}
 
 	/**
@@ -82,6 +90,7 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnWorkerStart(\swoole_server $server, $worker_id)
 	{
 		Log::Notice("On Worker[$worker_id] Start.");
+
 		$workerStrapps = include $this->getApp()
 		                              ->GetFrameworkPath() . '/Registry/Worker.php';
 		foreach($workerStrapps as $iface => $imp)
@@ -105,6 +114,12 @@ class WorkerServer extends Service implements IWorkerServer
 		     ->RegisterClass(Dispatcher::class);
 		$this->getApp()
 		     ->RegisterClass(Session::class);
+
+		$monitor = $this->getApp()
+		                ->GetInstance(IMonitor::class);
+		$monitor->Bind();
+
+		Event::Listen('OnWorkerStart', [&$server, &$worker_id]);
 	}
 
 	/**
@@ -117,7 +132,7 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnWorkerError(\swoole_server $server, $worker_id, $worker_pid, $exit_code)
 	{
-
+		Event::Listen('OnWorkerError', [&$server, &$worker_id, &$worker_pid, &$exit_code]);
 	}
 
 	/**
@@ -129,6 +144,7 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnWorkerStop(\swoole_server $server, $worker_id)
 	{
 		Log::Notice("On Worker[$worker_id] Stop.");
+		Event::Listen('OnWorkerStop', [&$server, &$worker_id]);
 	}
 
 	/**
@@ -140,11 +156,11 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message)
 	{
-
+		Event::Listen('OnPipeMessage', [&$server, &$from_worker_id, &$message]);
 	}
 
 	/**
-	 * Task一次工作结束以后，在Worker进程中被触发（如果在Task中执行了Return方法）
+	 * Task一次工作结束以后，在Worker进程中被触发（如果在Task中执行了Finish方法）
 	 *
 	 * @param \swoole_server $server     当前进程的swoole_server对象
 	 * @param int            $task_id    结束工作的Task的ID
@@ -152,6 +168,6 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnFinish(\swoole_server $server, $task_id, $taskResult)
 	{
-
+		Event::Listen('OnFinish', [&$server, &$task_id, &$taskResult]);
 	}
 }

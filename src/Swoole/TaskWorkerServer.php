@@ -8,8 +8,11 @@
 
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\Swoole\ITaskServer as ITaskServer;
+use DIServer\Interfaces\IMonitor;
+use DIServer\Interfaces\Swoole\ITaskWorkerServer as ITaskWorkerServer;
+use DIServer\Services\Event;
 use DIServer\Services\Log;
+use DIServer\Services\Server;
 use DIServer\Services\Service;
 
 /**
@@ -17,7 +20,7 @@ use DIServer\Services\Service;
  *
  * @author Back
  */
-class TaskServer extends Service implements ITaskServer
+class TaskWorkerServer extends Service implements ITaskWorkerServer
 {
 
 	/**
@@ -29,6 +32,10 @@ class TaskServer extends Service implements ITaskServer
 	public function OnTaskWorkerStart(\swoole_server $server, $task_worker_id)
 	{
 		Log::Notice("On Task Worker[$task_worker_id] Start.");
+		$monitor = $this->getApp()
+		                ->GetInstance(IMonitor::class);
+		$monitor->Bind();
+		Event::Listen('OnTaskWorkerStart', [&$server, &$task_worker_id]);
 		//$workerStrapps = include $this->getApp()
 		//                              ->GetFrameworkPath() . '/Config/Worker.php';
 		//foreach($workerStrapps as $iface => $imp)
@@ -58,7 +65,7 @@ class TaskServer extends Service implements ITaskServer
 	 */
 	public function OnTaskWorkerError(\swoole_server $server, $task_worker_id, $task_worker_pid, $exit_code)
 	{
-
+		Log::Error("On TaskWorker Error Exit, task_worker_id = $task_worker_id, task_worker_pid = $task_worker_pid, exit_code=$exit_code.");
 	}
 
 	/**
@@ -69,7 +76,7 @@ class TaskServer extends Service implements ITaskServer
 	 */
 	public function OnTaskWorkerStop(\swoole_server $server, $task_worker_id)
 	{
-		Log::Notice("TaskWorker[$task_worker_id] stop");
+		Log::Notice("On TaskWorker[$task_worker_id] stop");
 	}
 
 	/**
@@ -82,7 +89,17 @@ class TaskServer extends Service implements ITaskServer
 	 */
 	public function OnTask(\swoole_server $server, $task_id, $from_id, $param)
 	{
-		echo "Task accept." . $param . PHP_EOL;
+		//Log::Debug("Task accept task_id[$task_id]  from_id[$from_id]");
+
+		//Monitor::OnTaskReceive($server->worker_id);
+		//Log::Debug($param);
+		if($server->worker_id%2 == 0)
+		{
+			//Server::Close(1);
+			sleep(5);
+		}
+		Event::Listen('OnTask', [&$server, &$task_id, &$from_id, &$param]);
+		$server->finish('finish');
 	}
 
 	/**
@@ -94,6 +111,6 @@ class TaskServer extends Service implements ITaskServer
 	 */
 	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message)
 	{
-		Log::Notice('On task Pipe Message');
+		Log::Notice('On TaskWorker Pipe Message');
 	}
 }

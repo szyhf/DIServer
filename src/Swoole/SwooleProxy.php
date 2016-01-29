@@ -3,7 +3,7 @@ namespace DIServer\Swoole;
 
 use DIServer\Interfaces\Swoole\IManagerServer as IManagerServer;
 use DIServer\Interfaces\Swoole\IMasterServer as IMasterServer;
-use DIServer\Interfaces\Swoole\ITaskServer as ITaskServer;
+use DIServer\Interfaces\Swoole\ITaskWorkerServer as ITaskWorkerServer;
 use DIServer\Interfaces\Swoole\IWorkerServer as IWorkerServer;
 use DIServer\Interfaces\Swoole\ISwooleProxy;
 use DIServer\Services\Service;
@@ -40,11 +40,11 @@ class SwooleProxy extends Service implements ISwooleProxy
 	/**
 	 * Task进程服务
 	 *
-	 * @var \DIServer\Interfaces\Swoole\ITaskServer
+	 * @var \DIServer\Interfaces\Swoole\ITaskWorkerServer
 	 */
-	protected $taskServer;
+	protected $taskerServer;
 
-	public function __construct(\DIServer\Interfaces\IApplication $app,\swoole_server $server)
+	public function __construct(\DIServer\Interfaces\IApplication $app, \swoole_server $server)
 	{
 		parent::__construct($app);
 		$server->on("start", [$this, 'OnStart']);
@@ -100,7 +100,8 @@ class SwooleProxy extends Service implements ISwooleProxy
 	}
 
 	/**
-	 * 工作进程间通讯回调（划分Task进程和Worker进程）
+	 * 工作进程间通讯回调（划分TaskWorker进程和Worker进程）
+	 *
 	 * @param \swoole_server $server
 	 * @param                $from_worker_id
 	 * @param                $message
@@ -109,7 +110,7 @@ class SwooleProxy extends Service implements ISwooleProxy
 	{
 		if($server->taskworker)
 		{
-			$this->taskServer->OnPipeMessage($server, $from_worker_id, $message);
+			$this->taskerServer->OnPipeMessage($server, $from_worker_id, $message);
 		}
 		else
 		{
@@ -124,11 +125,11 @@ class SwooleProxy extends Service implements ISwooleProxy
 
 	public function OnTask(\swoole_server $server, $task_id, $from_id, $param)
 	{
-		$this->taskServer->OnTask($server, $task_id, $from_id, $param);
+		$this->taskerServer->OnTask($server, $task_id, $from_id, $param);
 	}
 
 	/**
-	 * 工作进程异常的代理（划分Task进程和Worker进程）
+	 * 工作进程异常的代理（划分TaskWorker进程和Worker进程）
 	 *
 	 * @param \swoole_server $server     当前服务
 	 * @param int            $worker_id  工作进程id
@@ -141,9 +142,9 @@ class SwooleProxy extends Service implements ISwooleProxy
 	{
 		if($server->taskworker)
 		{
-			$this->taskServer = $this->getApp()
-			                         ->GetInstance(ITaskServer::class);
-			$this->taskServer->OnTaskWorkerError($server, $worker_id, $worker_pid, $exit_code);
+			$this->taskerServer = $this->getApp()
+			                           ->GetInstance(ITaskWorkerServer::class);
+			$this->taskerServer->OnTaskerError($server, $worker_id, $worker_pid, $exit_code);
 		}
 		else
 		{
@@ -169,19 +170,15 @@ class SwooleProxy extends Service implements ISwooleProxy
 		     ->Unregister(\swoole_server::class);
 		$this->getApp()
 		     ->RegisterClassByInstance(\swoole_server::class, $server);
-		$reloadConfig = include $this->getApp()->GetFrameworkPath() . '/Registry/ServerReload.php';
-		foreach($reloadConfig as $iface => $imp)
-		{
-			$this->getApp()
-			     ->RegisterClass($imp);
-			$this->getApp()
-			     ->RegisterInterfaceByClass($iface, $imp);
-		}
+		$reloadConfig = include $this->getApp()
+		                             ->GetFrameworkPath() . '/Registry/ServerReload.php';
+		$this->getApp()
+		     ->AutoRegistry($reloadConfig);
 		if($server->taskworker)
 		{
-			$this->taskServer = $this->getApp()
-			                         ->GetInstance(ITaskServer::class);
-			$this->taskServer->OnTaskWorkerStart($server, $worker_id);
+			$this->taskerServer = $this->getApp()
+			                           ->GetInstance(ITaskWorkerServer::class);
+			$this->taskerServer->OnTaskWorkerStart($server, $worker_id);
 		}
 		else
 		{
@@ -195,9 +192,9 @@ class SwooleProxy extends Service implements ISwooleProxy
 	{
 		if($server->taskworker)
 		{
-			$this->taskServer = $this->getApp()
-			                         ->GetInstance(ITaskServer::class);
-			$this->taskServer->OnTaskWorkerStop($server, $worker_id);
+			$this->taskerServer = $this->getApp()
+			                           ->GetInstance(ITaskWorkerServer::class);
+			$this->taskerServer->OnTaskWorkerStop($server, $worker_id);
 		}
 		else
 		{
