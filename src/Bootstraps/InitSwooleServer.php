@@ -31,7 +31,7 @@ class InitSwooleServer extends Bootstrap
 		                     ->GetInstance(\swoole_server::class);
 		$this->setConfig();
 		$this->initProxy();//构造时已经自动完成了回调注册
-
+		$this->initMonitor();
 		$this->swoole->start();
 	}
 
@@ -69,7 +69,7 @@ class InitSwooleServer extends Bootstrap
 		}
 		if($setting['task_ipc_mode'] != 2)
 		{
-			throw new BootException("Error: t配置swoole.ask_ipc_mode设置不是2。");
+			throw new BootException("Error: 配置swoole.task_ipc_mode设置不是2。");
 		}
 		if($setting['dispatch_mode'] == 1 || $setting['dispatch_mode'] == 3)
 		{
@@ -91,5 +91,15 @@ class InitSwooleServer extends Bootstrap
 	protected function detectListener()
 	{
 		$files = AllFile(DI_APP_SERVER_LISTENER_PATH);
+	}
+
+	protected function initMonitor()
+	{
+		$this->getApp()
+		     ->RegisterClass(\DIServer\Monitor\SwooleTable::class);
+		$this->getApp()
+		     ->RegisterInterfaceByClass(\DIServer\Interfaces\IMonitor::class, \DIServer\Monitor\SwooleTable::class);
+		$this->getApp()
+		     ->GetInstance(\DIServer\Interfaces\IMonitor::class);
 	}
 }

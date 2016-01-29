@@ -27,7 +27,7 @@ class Server extends Facade
 			                         ->GetServerPath() . '/Runtimes/Temp';
 			//Log::Debug("send file :$tempFilePath");
 			$fileName = md5(microtime() . strlen($data) . $fd);
-			$filePath = $tempFilePath . '/' . $fileName;
+			$filePath = "$tempFilePath/$fileName";
 			//Log::Debug("send file :$filePath");
 			file_put_contents($filePath, $data, LOCK_EX);
 			$res = $instance->sendfile($fd, $filePath);
@@ -110,6 +110,13 @@ class Server extends Facade
 	{
 		/** @var \swoole_server $instance */
 		$instance = self::getFacadeRoot();
-		$instance->sendto($ip, $port, $data, $ipv6);
+		return $instance->sendto($ip, $port, $data, $ipv6);
+	}
+
+	public static function Close($fd, $from_id = 0)
+	{
+		/** @var \swoole_server $instance */
+		$instance = self::getFacadeRoot();
+		return $instance->close($fd, $from_id);
 	}
 }

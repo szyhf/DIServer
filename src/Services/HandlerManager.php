@@ -15,9 +15,13 @@ class HandlerManager extends Facade
 		return \DIServer\Interfaces\IHandlerManager::class;
 	}
 
-	public static function CallHandlerByName($handlerName, $data = '')
-	{
 
+	/**
+	 * @return \IHandlerManager
+	 */
+	public static function getFacadeRoot()
+	{
+		return parent::getFacadeRoot();
 	}
 
 	/**
@@ -29,6 +33,7 @@ class HandlerManager extends Facade
 	{
 		/** @var HandlerManager $instance */
 		$instance = self::Instance();
+
 		return $instance->GetHandler($handlerID);
 	}
 

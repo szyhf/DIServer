@@ -7,15 +7,17 @@
  */
 
 namespace DIServer\Bootstraps;
+
 use DIServer\Services\Bootstrap;
+
 class RegisterServices extends Bootstrap
 {
 	public function Bootstrap()
 	{
 
-		/** @var array $serviceConfig */
+		/** @var array $servicesConfig */
 		$servicesConfig = include DI_REGISTRY_PATH . '/Server.php';
-		$this->loadService($servicesConfig);
+		$this->getApp()->AutoRegistry($servicesConfig);
 		$this->setAlias();
 	}
 

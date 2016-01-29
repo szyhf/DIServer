@@ -35,7 +35,6 @@ namespace DIServer\Services
 				/* @var $bootstrap \DIServer\Bootstraps\Bootstrap */
 				$bootstrap = $this->getApp()
 				                  ->BuildWithClass($boot);
-				$bootstrap->Register();
 				$bootstrap->BeforeBootstrap();
 				$bootstrap->Bootstrap();
 				$bootstrap->AfterBootstrap();

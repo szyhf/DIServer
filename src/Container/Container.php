@@ -406,9 +406,9 @@ class Container implements IContainer
 		 * 如果传入了一个匿名函数，那么我们直接认为这是一个完整的工厂函数
 		 * 直接调用这个函数，并返回执行的结果（不绑定）
 		 */
-		$funcRef = new \ReflectionFunction($closure);
+		//$funcRef = new \ReflectionFunction($closure);
 
-		return $this->callFunction($funcRef, $parameters);
+		return call_user_func_array($closure,$parameters);
 	}
 
 	/**

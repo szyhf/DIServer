@@ -3,6 +3,7 @@
 namespace DIServer\Services;
 
 use DIServer\Container\Container;
+use DIServer\Interfaces\IApplication;
 
 /**
  * 参考Lavarel实现的简易Facade类
@@ -22,6 +23,7 @@ abstract class Facade extends Service
 			$instance = Container::Instance()
 			                     ->GetInstance(Static::getFacadeAccessor());
 		}
+
 		return $instance;
 	}
 
@@ -67,5 +69,15 @@ abstract class Facade extends Service
 			default:
 				return call_user_func_array([$instance, $method], $args);
 		}
+	}
+
+	/**
+	 * @return IApplication
+	 * @throws \DIServer\Container\NotRegistedException
+	 */
+	public static function GetAppStatic()
+	{
+		return Container::Instance()
+		                ->GetInstance(IApplication::class);
 	}
 }

@@ -9,10 +9,10 @@ namespace DIServer\Container;
 class MakeFailedException extends ContainerException
 {
 
-    public function __construct($type)
-    {
-	$msg = "Make instance of {$type} failed.";
-	parent::__construct($msg);
-    }
+	public function __construct($type)
+	{
+		$msg = "Make instance of {$type} failed.";
+		parent::__construct($msg);
+	}
 
 }
