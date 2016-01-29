@@ -51,5 +51,16 @@ interface IApplication extends IContainer
 	 */
 	public function Start();
 
-
+	/**
+	 * 自动注册（快捷工具）
+	 *
+	 * @param            $registry
+	 * @param bool|false $build
+	 *
+	 * @return array
+	 * @throws \DIServer\Container\NotExistException
+	 * @throws \DIServer\Container\NotRegistedException
+	 * @throws \DIServer\Container\RegistedException
+	 */
+	public function AutoRegistry($registry, $build = false);
 }

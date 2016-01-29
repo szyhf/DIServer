@@ -3,9 +3,9 @@
 namespace DIServer\Interfaces\Swoole;
 
 /**
- * @author Back
+ * @author Backw
  */
-interface ITaskServer
+interface ITaskWorkerServer
 {
 
 	/**
