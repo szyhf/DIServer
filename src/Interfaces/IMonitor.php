@@ -18,9 +18,9 @@ interface IMonitor
 
 	public function GetWorkerSendCount($workerID);
 
-	public function GetTaskerReceiveCount($taskWorkerID);
+	public function GetTaskWorkerReceiveCount($taskWorkerID);
 
-	public function GetTaskerFinishCount($taskWorkerID);
+	public function GetTaskWorkerFinishCount($taskWorkerID);
 
 	public function GetTaskFailedCount($taskWorkerID);
 }

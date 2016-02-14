@@ -1,11 +1,14 @@
 <?php
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\Swoole\IManagerServer as IManagerServer;
-use DIServer\Interfaces\Swoole\IMasterServer as IMasterServer;
-use DIServer\Interfaces\Swoole\ITaskWorkerServer as ITaskWorkerServer;
-use DIServer\Interfaces\Swoole\IWorkerServer as IWorkerServer;
+use DIServer\Interfaces\IApplication;
+use DIServer\Interfaces\Swoole\IManagerServer;
+use DIServer\Interfaces\Swoole\IMasterServer;
+use DIServer\Interfaces\Swoole\ITaskWorkerServer;
+use DIServer\Interfaces\Swoole\IWorkerServer;
 use DIServer\Interfaces\Swoole\ISwooleProxy;
+use DIServer\Services\Application;
+use DIServer\Services\Container;
 use DIServer\Services\Service;
 
 /**
@@ -44,9 +47,8 @@ class SwooleProxy extends Service implements ISwooleProxy
 	 */
 	protected $taskerServer;
 
-	public function __construct(\DIServer\Interfaces\IApplication $app, \swoole_server $server)
+	public function __construct(\swoole_server $server)
 	{
-		parent::__construct($app);
 		$server->on("start", [$this, 'OnStart']);
 		$server->on("connect", [$this, 'OnConnect']);
 		$server->on("receive", [$this, 'OnReceive']);
@@ -65,12 +67,9 @@ class SwooleProxy extends Service implements ISwooleProxy
 
 	public function OnStart(\swoole_server $server)
 	{
-		$this->getApp()
-		     ->Unregister(\swoole_server::class);
-		$this->getApp()
-		     ->RegisterClassByInstance(\swoole_server::class, $server);
-		$this->masterServer = $this->getApp()
-		                           ->GetInstance(IMasterServer::class);
+		Container::Unregister(\swoole_server::class);
+		Container::RegisterClassByInstance(\swoole_server::class, $server);
+		$this->masterServer = Container::GetInstance(IMasterServer::class);
 		$this->masterServer->OnStart($server);
 	}
 
@@ -142,14 +141,12 @@ class SwooleProxy extends Service implements ISwooleProxy
 	{
 		if($server->taskworker)
 		{
-			$this->taskerServer = $this->getApp()
-			                           ->GetInstance(ITaskWorkerServer::class);
+			$this->taskerServer = Container::GetInstance(ITaskWorkerServer::class);
 			$this->taskerServer->OnTaskerError($server, $worker_id, $worker_pid, $exit_code);
 		}
 		else
 		{
-			$this->workerServer = $this->getApp()
-			                           ->GetInstance(IWorkerServer::class);
+			$this->workerServer = Container::GetInstance(IWorkerServer::class);
 			$this->workerServer->OnWorkerError($server, $worker_id, $worker_pid, $exit_code);
 		}
 	}
@@ -166,24 +163,18 @@ class SwooleProxy extends Service implements ISwooleProxy
 	public function OnWorkerStart(\swoole_server $server, $worker_id)
 	{
 		//各个进程的$server对象不是同一个，要重置。
-		$this->getApp()
-		     ->Unregister(\swoole_server::class);
-		$this->getApp()
-		     ->RegisterClassByInstance(\swoole_server::class, $server);
-		$reloadConfig = include $this->getApp()
-		                             ->GetFrameworkPath() . '/Registry/ServerReload.php';
-		$this->getApp()
-		     ->AutoRegistry($reloadConfig);
+		Container::Unregister(\swoole_server::class);
+		Container::RegisterClassByInstance(\swoole_server::class, $server);
+		$reloadConfig = include Application::GetFrameworkPath() . '/Registry/ServerReload.php';
+		Container::AutoRegistry($reloadConfig);
 		if($server->taskworker)
 		{
-			$this->taskerServer = $this->getApp()
-			                           ->GetInstance(ITaskWorkerServer::class);
+			$this->taskerServer = Container::GetInstance(ITaskWorkerServer::class);
 			$this->taskerServer->OnTaskWorkerStart($server, $worker_id);
 		}
 		else
 		{
-			$this->workerServer = $this->getApp()
-			                           ->GetInstance(IWorkerServer::class);
+			$this->workerServer = Container::GetInstance(IWorkerServer::class);
 			$this->workerServer->OnWorkerStart($server, $worker_id);
 		}
 	}
@@ -192,14 +183,12 @@ class SwooleProxy extends Service implements ISwooleProxy
 	{
 		if($server->taskworker)
 		{
-			$this->taskerServer = $this->getApp()
-			                           ->GetInstance(ITaskWorkerServer::class);
+			$this->taskerServer = Container::GetInstance(ITaskWorkerServer::class);
 			$this->taskerServer->OnTaskWorkerStop($server, $worker_id);
 		}
 		else
 		{
-			$this->workerServer = $this->getApp()
-			                           ->GetInstance(IWorkerServer::class);
+			$this->workerServer = Container::GetInstance(IWorkerServer::class);
 			$this->workerServer->OnWorkerStop($server, $worker_id);
 		}
 	}
@@ -207,12 +196,9 @@ class SwooleProxy extends Service implements ISwooleProxy
 	public function OnManagerStart(\swoole_server $server)
 	{
 		//各个进程的$server对象不是同一个，要重置。
-		$this->getApp()
-		     ->Unregister(\swoole_server::class);
-		$this->getApp()
-		     ->RegisterClassByInstance(\swoole_server::class, $server);
-		$this->managerServer = $this->getApp()
-		                            ->GetInstance(IManagerServer::class);
+		Container::Unregister(\swoole_server::class);
+		Container::RegisterClassByInstance(\swoole_server::class, $server);
+		$this->managerServer = Container::GetInstance(IManagerServer::class);
 		$this->managerServer->OnManagerStart($server);
 	}
 

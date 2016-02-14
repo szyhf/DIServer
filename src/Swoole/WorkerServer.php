@@ -1,17 +1,14 @@
 <?php
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\IMonitor;
 use DIServer\Interfaces\Swoole\IWorkerServer;
 use DIServer\Interfaces\IRequest;
+use DIServer\Services\Application;
 use DIServer\Services\Dispatcher;
 use DIServer\Services\Event;
-use DIServer\Services\HandlerManager;
 use DIServer\Services\Log;
-use DIServer\Services\Monitor;
 use DIServer\Services\RequestFactory;
 use DIServer\Services\Service;
-use DIServer\Services\Session;
 
 /**
  * Description of WorkerServer
@@ -33,7 +30,6 @@ class WorkerServer extends Service implements IWorkerServer
 	{
 		$connectInfo = $server->connection_info($fd, $from_id);
 		Log::Info("Connect from {remote_ip}[$fd] to worker[$server->worker_id]", $connectInfo);
-
 		Event::Listen('OnConnect', [&$server, &$fd, &$from_id]);
 	}
 
@@ -62,11 +58,11 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnReceive(\swoole_server $server, $fd, $from_id, $data)
 	{
+		Event::Listen('OnReceive', [&$server, &$fd, &$from_id, &$data]);
 		/** @var IRequest $request */
 		$request = RequestFactory::Make($fd, $from_id, $data);
+		Event::Listen('OnRequest',[&$server,&$request]);
 		Dispatcher::Dispatch($request);
-
-		Event::Listen('OnReceive', [&$server, &$fd, &$from_id, &$data]);
 	}
 
 	/**
@@ -90,35 +86,8 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnWorkerStart(\swoole_server $server, $worker_id)
 	{
 		Log::Notice("On Worker[$worker_id] Start.");
-
-		$workerStrapps = include $this->getApp()
-		                              ->GetFrameworkPath() . '/Registry/Worker.php';
-		foreach($workerStrapps as $iface => $imp)
-		{
-			try
-			{
-				$this->getApp()
-				     ->RegisterClass($imp);
-				$this->getApp()
-				     ->RegisterInterfaceByClass($iface, $imp);
-			}
-			catch(BootException $ex)
-			{
-				Log::Warning("Register workerstrap[{$iface}=>{$imp}] failed.");
-			}
-		}
-
-		$this->getApp()
-		     ->RegisterClass(HandlerManager::class);
-		$this->getApp()
-		     ->RegisterClass(Dispatcher::class);
-		$this->getApp()
-		     ->RegisterClass(Session::class);
-
-		$monitor = $this->getApp()
-		                ->GetInstance(IMonitor::class);
-		$monitor->Bind();
-
+		$workerStrapps = include Application::GetFrameworkPath() . '/Registry/Worker.php';
+		Application::AutoRegistry($workerStrapps);
 		Event::Listen('OnWorkerStart', [&$server, &$worker_id]);
 	}
 
@@ -157,6 +126,9 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message)
 	{
 		Event::Listen('OnPipeMessage', [&$server, &$from_worker_id, &$message]);
+		Log::Debug("Receive message from $from_worker_id in $server->worker_id.");
+		/** @var \swoole_table $table */
+		//$table = unserialize($message);
 	}
 
 	/**

@@ -8,11 +8,10 @@
 
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\IMonitor;
 use DIServer\Interfaces\Swoole\ITaskWorkerServer as ITaskWorkerServer;
+use DIServer\Services\Application;
 use DIServer\Services\Event;
 use DIServer\Services\Log;
-use DIServer\Services\Server;
 use DIServer\Services\Service;
 
 /**
@@ -32,27 +31,12 @@ class TaskWorkerServer extends Service implements ITaskWorkerServer
 	public function OnTaskWorkerStart(\swoole_server $server, $task_worker_id)
 	{
 		Log::Notice("On Task Worker[$task_worker_id] Start.");
-		$monitor = $this->getApp()
-		                ->GetInstance(IMonitor::class);
-		$monitor->Bind();
+		if(file_exists(Application::GetServerPath() . '/Registry/TaskWorker.php'))
+		{
+			$registry = include Application::GetServerPath() . '/Registry/TaskWorker.php';
+			Application::AutoRegistry($registry);
+		}
 		Event::Listen('OnTaskWorkerStart', [&$server, &$task_worker_id]);
-		//$workerStrapps = include $this->getApp()
-		//                              ->GetFrameworkPath() . '/Config/Worker.php';
-		//foreach($workerStrapps as $iface => $imp)
-		//{
-		//	try
-		//	{
-		//		$this->getApp()
-		//		     ->RegisterClass($imp);
-		//		$this->getApp()
-		//		     ->RegisterInterfaceByClass($iface, $imp);
-		//	}
-		//	catch(\Exception $ex)
-		//	{
-		//		Log::Instance()
-		//		   ->Warning("Register taskworkerstrap[{$iface}=>{$imp}] failed.");
-		//	}
-		//}
 	}
 
 	/**
@@ -90,15 +74,16 @@ class TaskWorkerServer extends Service implements ITaskWorkerServer
 	public function OnTask(\swoole_server $server, $task_id, $from_id, $param)
 	{
 		//Log::Debug("Task accept task_id[$task_id]  from_id[$from_id]");
-
-		//Monitor::OnTaskReceive($server->worker_id);
-		//Log::Debug($param);
-		if($server->worker_id%2 == 0)
-		{
-			//Server::Close(1);
-			sleep(5);
-		}
-		Event::Listen('OnTask', [&$server, &$task_id, &$from_id, &$param]);
+		Event::Listen('TaskReceived', [&$server, &$task_id, &$from_id, &$param]);
+		//if($server->worker_id % 2 == 0)
+		//{
+		//	sleep(2);
+		//	if(rand(0, 100) > 50)
+		//	{
+		//		//return;
+		//	}
+		//}
+		Event::Listen('TaskFinished',[&$server, &$task_id, &$from_id, &$param]);
 		$server->finish('finish');
 	}
 
@@ -111,6 +96,6 @@ class TaskWorkerServer extends Service implements ITaskWorkerServer
 	 */
 	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message)
 	{
-		Log::Notice('On TaskWorker Pipe Message');
+		Log::Debug("Receive message from $from_worker_id in $server->worker_id.");
 	}
 }

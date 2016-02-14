@@ -1,7 +1,7 @@
 <?php
 namespace DIServer\Log;
 
-use DIServer\Container\Container;
+use DIServer\Services\Container;
 use DIServer\Interfaces\ILog;
 
 class DILog implements ILog
@@ -11,7 +11,7 @@ class DILog implements ILog
 	 */
 	protected function getCurrentSwoole()
 	{
-		return Container::Instance()[\swoole_server::class];
+		return Container::GetInstance(\swoole_server::class);
 	}
 
 	/**
@@ -22,19 +22,25 @@ class DILog implements ILog
 	 */
 	function DILog($msg, $level = "i")
 	{
+		//$debug_trace = end(debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 5));
+		//$line = $debug_trace['line'];
+		//$file = $debug_trace['file'];
+		$fileInfo = "";// "In $file, line $line." . PHP_EOL;
+		//echo $fileInfo;
 		if(DI_DAEMONIZE)
 		{
 			$msg = str_replace("\n", "\\n", $msg);
-			echo date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . "][" . $this->getCurrentSwoole()->worker_id . "] " . $msg . "\n";
+			echo $fileInfo . date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . "][" . $this->getCurrentSwoole()->worker_id . "] " . $msg . "\n";
 		}
 		else
 		{
 			$messages = explode("\n", $msg);
+			$_print = $fileInfo;
 			foreach($messages as $msg)
 			{
-				echo date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . '] ' . $msg . "\n";
+				$_print .= date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . '] ' . $msg . "\n";
 			}
-
+			echo $_print;
 		}
 
 		return $this;//支持连贯操作
@@ -174,7 +180,7 @@ class DILog implements ILog
 
 	/**
 	 * Format the parameters for the logger.
-	 * （来自Lavarel的Log类）
+	 * （改动自Lavarel的Log类）
 	 *
 	 * @param  mixed $message
 	 *
@@ -182,7 +188,11 @@ class DILog implements ILog
 	 */
 	protected static function formatMessage($message)
 	{
-		if(is_array($message)||is_object($message))
+		if(is_array($message))
+		{
+			return static::formatArray($message);
+		}
+		elseif(is_object($message))
 		{
 			return var_export($message, true);
 		}
@@ -196,6 +206,36 @@ class DILog implements ILog
 		}
 
 		return $message;
+	}
+
+	private static function formatArray(array $ary)
+	{
+		$longestKey = 0;
+		foreach($ary as $key => $set)
+		{
+			if(strlen($key) > $longestKey)
+			{
+				$longestKey = strlen($key);
+			}
+		}
+		//$settings = "=============================================================" . PHP_EOL;
+		//$settings .= 'Monitor:' . PHP_EOL;
+		$settings = '';
+		foreach($ary as $key => $set)
+		{
+			if(is_array($set))
+			{
+				$settings .= str_pad($key, $longestKey + 1, ' ', STR_PAD_RIGHT) . "=> \n\t" . trim(str_replace(PHP_EOL, PHP_EOL . "\t", static::formatArray($set))) . PHP_EOL;
+			}
+			else
+			{
+				$settings .= str_pad($key, $longestKey + 1, ' ', STR_PAD_RIGHT) . '=> ' . $set . PHP_EOL;
+			}
+		}
+
+		//$settings .= "=============================================================" . PHP_EOL;
+
+		return trim($settings);
 	}
 
 	/**

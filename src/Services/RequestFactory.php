@@ -2,9 +2,7 @@
 
 namespace DIServer\Services;
 
-
-use DIServer\Container\Container;
-use DIServer\Request\Request;
+use DIServer\Request\Base;
 use DIServer\Interfaces\IRequest;
 
 class RequestFactory extends Service
@@ -22,16 +20,13 @@ class RequestFactory extends Service
 	{
 		if(!$clientInfo)
 		{
-			$instance = Container::Instance()
-			                     ->BuildWithClass(Request::class, [
-				                     'fd'     => $fd,
-				                     'fromID' => $fromID,
-				                     'data'   => $data
-			                     ]);
-			Container::Instance()
-			         ->Unregister(IRequest::class);
-			Container::Instance()
-			         ->RegisterInterfaceByInstance(IRequest::class, $instance);
+			$instance = Container::BuildWithClass(Base::class, [
+				'fd'     => $fd,
+				'fromID' => $fromID,
+				'data'   => $data
+			]);
+			Container::Unregister(IRequest::class);
+			Container::RegisterInterfaceByInstance(IRequest::class, $instance);
 
 			return $instance;
 		}

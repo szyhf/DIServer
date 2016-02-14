@@ -17,7 +17,7 @@ class MasterServer extends Service implements IMasterServer
 
 	public function OnStart(\swoole_server $server)
 	{
-		Log::Notice("On Master Start");
+		//Log::Notice("On Master Start");
 	}
 
 	public function OnShutdown(\swoole_server $server)
@@ -25,5 +25,6 @@ class MasterServer extends Service implements IMasterServer
 		Log::Instance()
 		   ->Notice("On Master Shutdown");
 	}
+
 
 }

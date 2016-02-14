@@ -152,14 +152,17 @@ namespace DIServer
 			{
 				if(class_exists($serv))
 				{
-					$this->RegisterClass($serv);
-					if($this->IsAbstract($iface))
+					if(!$this->HasRegistered($serv))
 					{
-						$this->RegisterInterfaceByClass($iface, $serv);
-					}
-					if($build)
-					{
-						$instances[] = $this->GetInstance($serv);
+						$this->RegisterClass($serv);
+						if($this->IsAbstract($iface))
+						{
+							$this->RegisterInterfaceByClass($iface, $serv);
+						}
+						if($build)
+						{
+							$instances[] = $this->GetInstance($serv);
+						}
 					}
 				}
 				else

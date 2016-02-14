@@ -2,11 +2,10 @@
 
 namespace DIServer\Request;
 
-
-use DIServer\Container\Container;
 use DIServer\Interfaces\IRequest;
+use DIServer\Services\Container;
 
-class Request implements IRequest
+class Base implements IRequest
 {
 	protected $fd;
 	protected $fromID;
@@ -23,7 +22,7 @@ class Request implements IRequest
 		{
 			//因为跨进程投递时server会改变，为了确保成功，不使用构造函数注入的方式获取当前server
 			/** @var \swoole_server $swoole */
-			$swoole = Container::Instance()[\swoole_server::class];
+			$swoole = Container::GetInstance(\swoole_server::class);
 			$connectionInfo = $swoole->connection_info($this->GetFD(), $this->GetFromID());
 			$this->remoteIP = $connectionInfo['remote_ip'];
 			$this->remotePort = $connectionInfo['remote_port'];

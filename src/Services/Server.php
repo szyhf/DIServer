@@ -3,7 +3,6 @@
 namespace DIServer\Services;
 
 use DIServer\Interfaces\IRequest;
-use DIServer\Container\Container;
 use DIServer\Interfaces\IApplication;
 
 class Server extends Facade
@@ -22,8 +21,7 @@ class Server extends Facade
 		if(strlen($data) > self::SendFileLimit)
 		{
 			//Log::Debug("send file :" . strlen($data));
-			$tempFilePath = Container::Instance()
-			                         ->GetInstance(IApplication::class)
+			$tempFilePath = Container::GetInstance(IApplication::class)
 			                         ->GetServerPath() . '/Runtimes/Temp';
 			//Log::Debug("send file :$tempFilePath");
 			$fileName = md5(microtime() . strlen($data) . $fd);
@@ -53,8 +51,7 @@ class Server extends Facade
 	 */
 	public static function SendResponse($data)
 	{
-		$fd = Container::Instance()
-		               ->GetInstance(IRequest::class)
+		$fd = Container::GetInstance(IRequest::class)
 		               ->GetFD();
 
 		return self::Send($fd, $data);
@@ -110,6 +107,7 @@ class Server extends Facade
 	{
 		/** @var \swoole_server $instance */
 		$instance = self::getFacadeRoot();
+
 		return $instance->sendto($ip, $port, $data, $ipv6);
 	}
 
@@ -117,6 +115,35 @@ class Server extends Facade
 	{
 		/** @var \swoole_server $instance */
 		$instance = self::getFacadeRoot();
+
 		return $instance->close($fd, $from_id);
+	}
+
+	public static function Task($data, $taskWorkerID = -1)
+	{
+		/** @var \swoole_server $instance */
+		$instance = self::getFacadeRoot();
+		Event::Listen('TaskWillSend', [$data, $taskWorkerID]);
+		$taskID = $instance->task($data, $taskWorkerID);
+		Event::Listen('TaskSent', [$data, $taskID, $taskWorkerID]);
+
+		return $taskID;
+	}
+
+	public static function TaskWait($data, $timeout = 0.5, $taskWorkerID = -1)
+	{
+		/** @var \swoole_server $instance */
+		$instance = self::getFacadeRoot();
+
+		Event::Listen('TaskWaitWillSend', [$data, $timeout, $taskWorkerID]);
+
+		return $instance->taskwait($data);
+	}
+
+	public static function Reload()
+	{
+		/** @var \swoole_server $instance */
+		$instance = self::getFacadeRoot();
+		$instance->reload();
 	}
 }

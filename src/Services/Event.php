@@ -22,7 +22,7 @@ class Event extends Facade
 	{
 		//Debug参考，每次注册事件时都会打印，慎用！！
 		//建议调用前先写部分过滤
-		//$caller = current(debug_backtrace());
+		//$caller = current(debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT,1));
 		//$file = str_replace(self::GetAppStatic()
 		//                        ->GetFrameworkPath(), '', $caller['file']);
 		//Log::Debug("Add tag '$tag' in $file on line {$caller['line']}");

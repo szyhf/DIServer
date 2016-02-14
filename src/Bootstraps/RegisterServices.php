@@ -9,6 +9,7 @@
 namespace DIServer\Bootstraps;
 
 use DIServer\Services\Bootstrap;
+use DIServer\Services\Application;
 
 class RegisterServices extends Bootstrap
 {
@@ -17,7 +18,7 @@ class RegisterServices extends Bootstrap
 
 		/** @var array $servicesConfig */
 		$servicesConfig = include DI_REGISTRY_PATH . '/Server.php';
-		$this->getApp()->AutoRegistry($servicesConfig);
+		Application::AutoRegistry($servicesConfig);
 		$this->setAlias();
 	}
 
@@ -26,14 +27,10 @@ class RegisterServices extends Bootstrap
 	{
 		foreach($servicesConfig as $iface => $imp)
 		{
-			$this->getApp()
-			     ->RegisterClass($imp);
-			if($this->getApp()
-			        ->IsAbstract($iface)
-			)
+			Application::RegisterClass($imp);
+			if(Application::IsAbstract($iface))
 			{
-				$this->getApp()
-				     ->RegisterInterfaceByClass($iface, $imp);
+				Application::RegisterInterfaceByClass($iface, $imp);
 			}
 		}
 	}

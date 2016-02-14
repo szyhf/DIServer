@@ -2,6 +2,9 @@
 
 namespace DIServer\Services
 {
+
+	use DIServer\Services\Application;
+
 	/**
 	 * 启动器管理器
 	 * （按配置加载并依序启动启动器）
@@ -24,8 +27,7 @@ namespace DIServer\Services
 			/**
 			 * DIServer默认启动器配置目录。
 			 */
-			return include $this->getApp()
-			                    ->GetFrameworkPath() . '/Config/Bootstrap.php';
+			return include Application::GetFrameworkPath() . '/Config/Bootstrap.php';
 		}
 
 		protected function bootWithBootstraps(array $bootstraps = [])
@@ -33,8 +35,7 @@ namespace DIServer\Services
 			foreach($bootstraps as $boot)
 			{
 				/* @var $bootstrap \DIServer\Bootstraps\Bootstrap */
-				$bootstrap = $this->getApp()
-				                  ->BuildWithClass($boot);
+				$bootstrap = Application::BuildWithClass($boot);
 				$bootstrap->BeforeBootstrap();
 				$bootstrap->Bootstrap();
 				$bootstrap->AfterBootstrap();

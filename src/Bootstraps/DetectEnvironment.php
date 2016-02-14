@@ -1,7 +1,9 @@
 <?php
 
 namespace DIServer\Bootstraps;
+
 use DIServer\Services\Bootstrap;
+
 /**
  * 生成环境变量
  *
@@ -12,18 +14,6 @@ class DetectEnvironment extends Bootstrap
 
 	public function Bootstrap()
 	{
-		//try
-		//{
-		//	$env = new \Dotenv\Dotenv($this->GetApp()->GetBasePath());
-		//	$env->load();
-		//	var_dump($_ENV);
-		//	var_dump(${getenv('BASE_DIR')});
-		//}
-		//catch(\Exception $ex)
-		//{
-		//	var_dump($ex);
-		//}
-
 		$this->OldBoot();
 	}
 

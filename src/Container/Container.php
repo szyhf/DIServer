@@ -229,7 +229,7 @@ class Container implements IContainer
 		$type = $this->getAlias($type);
 
 		$instances = [];
-		if($this->HasRegisterer($type))
+		if($this->HasRegistered($type))
 		{
 			foreach($this->registries[$type] as $key => $value)
 			{
@@ -247,7 +247,7 @@ class Container implements IContainer
 	 *
 	 * @return bool
 	 */
-	public function HasRegisterer($type)
+	public function HasRegistered($type)
 	{
 		$type = $this->normalizeType($type);
 		$type = $this->getAlias($type);
@@ -408,7 +408,7 @@ class Container implements IContainer
 		 */
 		//$funcRef = new \ReflectionFunction($closure);
 
-		return call_user_func_array($closure,$parameters);
+		return call_user_func_array($closure, $parameters);
 	}
 
 	/**
@@ -739,14 +739,18 @@ class Container implements IContainer
 		if(!interface_exists($abstract))
 		{
 			//如果是抽象类也可以接受
-			$refClass = new \ReflectionClass($abstract);
+			try{
+				$refClass = new \ReflectionClass($abstract);
+				return $refClass->isAbstract();
+			}catch (\ReflectionException $ex){
 
-			return $refClass->isAbstract();
+			}
 		}
 		else
 		{
 			return true;
 		}
+		return false;
 	}
 
 	/**
@@ -1041,16 +1045,34 @@ class Container implements IContainer
 	/**
 	 * 类成员方法的依赖注入调用
 	 *
-	 * @param \DIServer\Container\object $instance
-	 * @param \ReflectionMethod          $methodRef  方法的反射实例
-	 * @param array                      $parameters （可选）自定义提供的参数-实例列表['$paramName'=>'$instance']
+	 * @param object                   $instance
+	 * @param \ReflectionMethod|string $method     方法的反射实例
+	 * @param array                    $parameters （可选）自定义提供的参数-实例列表['$paramName'=>'$instance']
 	 *
 	 * @return mixed 方法的返回值
 	 */
-	protected function callMethod(object $instance, \ReflectionMethod $methodRef, array $parameters = [])
+	public function CallMethod($instance, $method, array $parameters = [])
 	{
 		$res = null;
-
+		if(is_string($method))
+		{
+			if(method_exists($instance, $method))
+			{
+				$methodRef = new \ReflectionMethod(get_class($instance), $method);
+			}
+			else
+			{
+				throw new \Exception("Calling method [$method] of instance [$instance] is not exist.");
+			}
+		}
+		elseif($method instanceof \ReflectionMethod)
+		{
+			$methodRef = $method;
+		}
+		else
+		{
+			throw new \Exception("Parameter \$method must be a string or instance of \\ReflectionMethod.");
+		}
 		$dependencies = $methodRef->getParameters();
 		if(empty($dependencies))
 		{

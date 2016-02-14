@@ -7,22 +7,20 @@ use DIServer\Interfaces\IDispatcher;
 use DIServer\Interfaces\IRequest;
 use DIServer\Interfaces\IHandler;
 use DIServer\Services\HandlerManager;
-use DIServer\Services\Log;
 use DIServer\Services\Service;
 
-class Base extends Service implements IDispatcher
+class WorkerDispatcher extends Service implements IDispatcher
 {
-	protected $handlerManager;
-
-	public function __construct(\DIServer\Interfaces\IApplication $app, HandlerManager $handlerManager)
-	{
-		parent::__construct($app);
-		$this->handlerManager = $handlerManager;
-	}
+	protected $filters = [];
 
 	public function Dispatch(IRequest $request)
 	{
 		$this->handle($request);
+	}
+
+	protected function filtering(IRequest $request)
+	{
+
 	}
 
 	protected function handle(IRequest $request)
@@ -33,8 +31,11 @@ class Base extends Service implements IDispatcher
 			$handlers = HandlerManager::GetHandlerByID($handlerID);
 			if(is_array($handlers))
 			{
+				/** @var IHandler $handler */
 				foreach($handlers as $handler)
 				{
+
+					$filters = $handler->GetFilters();
 					$handler->BeforeHandle($request);
 					$handler->Handle($request);
 					$handler->AfterHandle($request);

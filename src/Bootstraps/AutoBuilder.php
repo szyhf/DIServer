@@ -10,7 +10,7 @@ class AutoBuilder extends Bootstrap
 {
 	public function Bootstrap()
 	{
-		$dirs = include $this->getApp()->GetFrameworkPath() . '/Config/Directory.php';
+		$dirs = include Application::GetFrameworkPath() . '/Config/Directory.php';
 		foreach($dirs as $dir)
 		{
 			$this->tryBuild($dir);

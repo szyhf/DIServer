@@ -1,20 +1,23 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Back
- * Date: 2015/12/28
- * Time: 19:30
- */
 
-namespace DIServer\Interfaces;
+namespace DIServer\Services;
 
 
-interface IContainer extends \ArrayAccess
+class Container extends Facade
 {
+	public static function getFacadeRoot()
+	{
+		//特殊处理。
+		return \DIServer\Container\Container::Instance();
+	}
+
 	/**
 	 * 清空容器
 	 */
-	public function Clear();
+	public static function Clear()
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 获得指定接口\类型\别名的所有已实例化的实例
@@ -23,7 +26,10 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @return array 所有实例的集合
 	 */
-	public function GetAllImplementedInstances($type);
+	public static function GetAllImplementedInstances($type)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 设置别名（仅保存映射名，不会检查映射名是否存在）
@@ -31,7 +37,10 @@ interface IContainer extends \ArrayAccess
 	 * @param string $alias
 	 * @param string $type
 	 */
-	public function SetAlias($alias, $type);
+	public static function SetAlias($alias, $type)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 某个类型\接口是否有实例化的实例
@@ -40,7 +49,10 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @return bool
 	 */
-	public function HasImplemented($type);
+	public static function HasImplemented($type)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 尝试获得指定接口\类型的所有实例
@@ -49,7 +61,10 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @return array
 	 */
-	public function GetAllInstances($type);
+	public static function GetAllInstances($type)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 某个类型\接口是否有被注册过
@@ -58,7 +73,10 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @return bool
 	 */
-	public function HasRegistered($type);
+	public static function HasRegistered($type)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 尝试获得指定接口\类型\别名的单例
@@ -71,7 +89,10 @@ interface IContainer extends \ArrayAccess
 	 * @throws \DIServer\Container\MakeFailedException
 	 * @return mixed
 	 */
-	public function GetInstance($type, $key = null);
+	public static function GetInstance($type, $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 指定类型的指定Key是否已经被注册
@@ -81,7 +102,10 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @return bool
 	 */
-	public function IsRegistered($type, $key = null);
+	static function IsRegistered($type, $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 根据类名构造一个类的实例
@@ -96,7 +120,10 @@ interface IContainer extends \ArrayAccess
 	 * @return mixed 类的实例
 	 * @throws \DIServer\Container\MakeFailedException
 	 */
-	public function BuildWithClass($className, array $parameters = []);
+	public static function BuildWithClass($className, array $parameters = [])
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 自动注册
@@ -106,7 +133,10 @@ interface IContainer extends \ArrayAccess
 	 * @param array                        $constructorParams
 	 * @param string                       $key
 	 */
-	public function Register($type, $auto = null, $key = null, array $constructorParams = []);
+	public static function Register($type, $auto = null, $key = null, array $constructorParams = [])
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 注册一个接口的实现类（请另外注册该类）
@@ -119,7 +149,10 @@ interface IContainer extends \ArrayAccess
 	 * @throws \DIServer\Container\NotExistException
 	 * @throws \DIServer\Container\RegistedException
 	 */
-	public function RegisterInterfaceByClass($interface, $class, $key = null, $classKey = null);
+	public static function RegisterInterfaceByClass($interface, $class, $key = null, $classKey = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 注册一个接口的实现工厂
@@ -132,7 +165,10 @@ interface IContainer extends \ArrayAccess
 	 * @throws \DIServer\Container\NotExistException
 	 * @throws \DIServer\Container\RegistedException
 	 */
-	public function RegisterInterfaceByFactory($interface, \Closure $factory, array $factoryParams = [], $key = null);
+	public static function RegisterInterfaceByFactory($interface, \Closure $factory, array $factoryParams = [], $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 注册一个接口的实例
@@ -145,7 +181,10 @@ interface IContainer extends \ArrayAccess
 	 * @throws \DIServer\Container\RegistedException
 	 * @throws \DIServer\Container\NotTypeOfInstanceException
 	 */
-	public function RegisterInterfaceByInstance($interface, $instance, $key = null);
+	public static function RegisterInterfaceByInstance($interface, $instance, $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 用工厂方法注册一个类型
@@ -155,7 +194,10 @@ interface IContainer extends \ArrayAccess
 	 * @param array    $factoryParams （可选）工厂方法的自定参数字典
 	 * @param string   $key           （可选）多例模式下的key
 	 */
-	public function RegisterClassByFactory($class, \Closure $factory, array $factoryParams = [], $key = null);
+	public static function RegisterClassByFactory($class, \Closure $factory, array $factoryParams = [], $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 注册一个类型
@@ -167,7 +209,10 @@ interface IContainer extends \ArrayAccess
 	 * @throws \DIServer\Container\NotExistException
 	 * @throws \DIServer\Container\RegistedException
 	 */
-	public function RegisterClass($class, array $constructorParams = [], $key = null);
+	public static function RegisterClass($class, array $constructorParams = [], $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 直接用实例注册
@@ -178,7 +223,10 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @throws \DIServer\Container\NotTypeOfInstanceException
 	 */
-	public function RegisterClassByInstance($class, $instance, $key = null);
+	public static function RegisterClassByInstance($class, $instance, $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 注销
@@ -186,14 +234,20 @@ interface IContainer extends \ArrayAccess
 	 * @param string $type
 	 * @param string $key
 	 */
-	public function Unregister($type, $key = null);
+	public static function Unregister($type, $key = null)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 移除别名
 	 *
 	 * @param $alias
 	 */
-	public function RemoveAlias($alias);
+	public static function RemoveAlias($alias)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 是不是接口或者抽象类
@@ -202,14 +256,20 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @return boolean
 	 */
-	public function IsAbstract($abstract);
+	public static function IsAbstract($abstract)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 设置默认实例
 	 *
 	 * @param \DIServer\Interfaces\IContainer $container
 	 */
-	public static function SetInstance(IContainer $container);
+	public static function SetInstance(IContainer $container)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 
 	/**
 	 * 类成员方法的依赖注入调用
@@ -220,5 +280,8 @@ interface IContainer extends \ArrayAccess
 	 *
 	 * @return mixed 方法的返回值
 	 */
-	public function CallMethod($instance, $method, array $parameters = []);
+	public static function CallMethod($instance, $method, array $parameters = [])
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
 }

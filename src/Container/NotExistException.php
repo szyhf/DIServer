@@ -8,9 +8,9 @@ namespace DIServer\Container;
  */
 class NotExistException extends ContainerException
 {
-    public function __construct($type,$key)
-    {
-	$msg = "Register type {$type}[{$key}] is not exist.";
-	parent::__construct($msg);
-    }
+	public function __construct($type, $key)
+	{
+		$msg = "Register type {$type}[{$key}] is not exist.";
+		parent::__construct($msg);
+	}
 }

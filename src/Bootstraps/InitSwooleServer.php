@@ -2,6 +2,7 @@
 
 namespace DIServer\Bootstraps;
 
+use DIServer\Services\Application;
 use DIServer\Services\Bootstrap;
 use DIServer\Interfaces\Swoole\ISwooleProxy;
 
@@ -25,22 +26,22 @@ class InitSwooleServer extends Bootstrap
 			'serv_mode' => SWOOLE_PROCESS,
 			'sock_type' => SWOOLE_SOCK_TCP,
 		];
-		$this->getApp()
-		     ->RegisterClass(\swoole_server::class, $initParams);
-		$this->swoole = $this->getApp()
-		                     ->GetInstance(\swoole_server::class);
+		Application::RegisterClass(\swoole_server::class, $initParams);
+		$this->swoole = Application::GetInstance(\swoole_server::class);
 		$this->setConfig();
 		$this->initProxy();//构造时已经自动完成了回调注册
 		$this->initMonitor();
+		echo $this->formatSettings($this->swoole);
 		$this->swoole->start();
+
 	}
 
 	protected function setConfig()
 	{
 		//加载惯例配置//一次性配置，不用保存在内存中
-		$defaultConfig = include DI_CONFIG_PATH . '/Swoole.php';
+		$defaultConfig = include Application::GetFrameworkPath() . '/Config/Swoole.php';
 		//加载自定义配置//一次性配置，不用保存在内存中
-		//$serverConfig = include DI_APP_SERVER_CONF_PATH . '/Swoole.php';
+		$serverConfig = include Application::GetServerPath() . '/Config/Swoole.php';
 		//更新配置
 		foreach($defaultConfig as $key => $value)
 		{
@@ -84,8 +85,7 @@ class InitSwooleServer extends Bootstrap
 	protected function initProxy()
 	{
 		/** @var \DIServer\Interfaces\Swoole\ISwooleProxy $swooleProxy */
-		$this->getApp()
-		     ->GetInstance(ISwooleProxy::class);
+		Application::GetInstance(ISwooleProxy::class);
 	}
 
 	protected function detectListener()
@@ -95,11 +95,30 @@ class InitSwooleServer extends Bootstrap
 
 	protected function initMonitor()
 	{
-		$this->getApp()
-		     ->RegisterClass(\DIServer\Monitor\SwooleTable::class);
-		$this->getApp()
-		     ->RegisterInterfaceByClass(\DIServer\Interfaces\IMonitor::class, \DIServer\Monitor\SwooleTable::class);
-		$this->getApp()
-		     ->GetInstance(\DIServer\Interfaces\IMonitor::class);
+		Application::RegisterClass(\DIServer\Monitor\SwooleTable::class);
+		Application::RegisterInterfaceByClass(\DIServer\Interfaces\IMonitor::class, \DIServer\Monitor\SwooleTable::class);
+		$monitor = Application::GetInstance(\DIServer\Interfaces\IMonitor::class);
+		$monitor->Bind();
+	}
+
+	private function formatSettings(\swoole_server $server)
+	{
+		$longestKey = 0;
+		foreach($server->setting as $key => $set)
+		{
+			if(strlen($key) > $longestKey)
+			{
+				$longestKey = strlen($key);
+			}
+		}
+		$settings = "";//"=============================================================" . PHP_EOL;
+		$settings .= 'Swoole Settings:' . PHP_EOL;
+		foreach($server->setting as $key => $set)
+		{
+			$settings .= str_pad($key, $longestKey + 1, ' ', STR_PAD_RIGHT) . '=> ' . $set . PHP_EOL;
+		}
+		$settings .= "=============================================================" . PHP_EOL;
+
+		return $settings;
 	}
 }
