@@ -102,6 +102,21 @@ class Container implements IContainer
 		$this[__CLASS__] = $this;
 	}
 
+	private function __clone()
+	{
+		//对单例的保护，禁止深度复制
+	}
+		
+	private function __sleep()
+	{
+		//对单例的保护，禁止serialize
+	}
+
+	private function __wakeup()
+	{
+		//对单例的保护，禁止unserialize
+	}
+
 	/**
 	 * 默认容器实例
 	 *
@@ -980,44 +995,6 @@ class Container implements IContainer
 		$this->unregisterTypeByKey($this->interfaces, $type, $key);
 		$this->unregisterTypeByKey($this->registries, $type, $key);
 		$this->unregisterTypeByKey($this->selfParams, $type, $key);
-
-
-		//unset($this->implemented[$type][$key]);
-		//if(isset($this->implemented[$type]))
-		//{
-		//	if(!count($this->implemented[$type]))
-		//	{
-		//		unset($this->implemented[$type]);
-		//	}
-		//}
-		//
-		//unset($this->instances[$type][$key]);
-		//if(isset($this->instances[$type]))
-		//{
-		//	if(!count($this->instances[$type]))
-		//	{
-		//		unset($this->instances[$type]);
-		//	}
-		//}
-		//
-		//unset($this->interfaces[$type][$key]);
-		//
-		//if(!count($this->interfaces[$type]))
-		//{
-		//	unset($this->interfaces[$type]);
-		//}
-		//
-		//unset($this->registries[$type][$key]);
-		//if(!count($this->registries[$type]))
-		//{
-		//	unset($this->registries[$type]);
-		//}
-		//
-		//unset($this->selfParams[$type][$key]);
-		//if(!count($this->selfParams[$type]))
-		//{
-		//	unset($this->selfParams[$type]);
-		//}
 	}
 
 	protected function unregisterTypeByKey(&$ary, $type, $key)

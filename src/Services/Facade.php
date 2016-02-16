@@ -67,4 +67,25 @@ abstract class Facade extends Service
 				return call_user_func_array([$instance, $method], $args);
 		}
 	}
+
+	private function __clone()
+	{
+		//对单例的保护，禁止深度复制
+	}
+
+
+	private function __construct()
+	{
+		//对单例的保护，不容许直接调用构造函数
+	}
+
+	private function __sleep()
+	{
+		//对单例的保护，禁止serialize
+	}
+
+	private function __wakeup()
+	{
+		//对单例的保护，禁止unserialize
+	}
 }
