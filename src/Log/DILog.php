@@ -229,7 +229,12 @@ class DILog implements ILog
 			}
 			else
 			{
-				$settings .= str_pad($key, $longestKey + 1, ' ', STR_PAD_RIGHT) . '=> ' . $set . PHP_EOL;
+				$type = substr(gettype($set), 0, 1);
+				if(is_bool($set))
+				{
+					$set = $set ? "TRUE" : "FALSE";
+				}
+				$settings .= str_pad($key, $longestKey + 1, ' ', STR_PAD_RIGHT) . "(" . $type . ") => " . $set . PHP_EOL;
 			}
 		}
 
