@@ -4,8 +4,11 @@ namespace DIServer
 {
 
 	use DIServer\Container\Container as Container;
+	use DIServer\Helpers\Ary;
+	use DIServer\Helpers\IO;
 	use DIServer\Interfaces\IApplication;
 	use \DIServer\Interfaces\IBootstrapper;
+	use DIServer\Services\Event;
 
 	/**
 	 * 主程序
@@ -114,28 +117,9 @@ namespace DIServer
 			$this->RegisterInterfaceByClass(IApplication::class, get_class($this));
 		}
 
-		protected function bindBaseService()
-		{
-			$baseServices = include $this->GetFrameworkPath() . '/Registry/Application.php';
-			$this->bindService($baseServices);
-		}
-
-		/**
-		 * 根据数组[$iface=>$class]快速绑定服务的快捷方法
-		 * 若未提供$iface则会仅注册$class
-		 *
-		 * @param array $iface2service
-		 *
-		 * @throws \DIServer\Container\NotExistException
-		 * @throws \DIServer\Container\RegistedException
-		 */
-		protected function bindService(array $iface2service)
-		{
-			return $this->AutoRegistry($iface2service);
-		}
-
 		/**
 		 * 自动注册（快捷工具）
+		 * 会自动搜索FrameworkPath、CommonPath、ServerPath的Registry目录并自动继承实现
 		 *
 		 * @param            $registry
 		 * @param bool|false $build
@@ -145,31 +129,47 @@ namespace DIServer
 		 * @throws \DIServer\Container\NotRegistedException
 		 * @throws \DIServer\Container\RegistedException
 		 */
-		public function AutoRegistry($registry, $build = false)
+		public function AutoRegistry($registryFile, $build = false)
 		{
-			$instances = [];
-			foreach($registry as $iface => $serv)
+			$files[] = $this->GetFrameworkPath("/Registry/$registryFile");
+			$files[] = $this->GetCommonPath("/Registry/$registryFile");
+			$files[] = $this->GetServerPath("/Registry/$registryFile");
+			$registry = [];
+			foreach($files as $registryFilePath)
 			{
-				if(class_exists($serv))
+				if(file_exists($registryFilePath))
 				{
-					if(!$this->HasRegistered($serv))
+					$newRegistry = include $registryFilePath;
+					if(is_array($newRegistry))
 					{
-						$this->RegisterClass($serv);
-						if($this->IsAbstract($iface))
+						Ary::MergeRecursive($registry, $newRegistry);
+						$instances = [];
+						foreach($registry as $iface => $serv)
 						{
-							$this->RegisterInterfaceByClass($iface, $serv);
-						}
-						if($build)
-						{
-							$instances[] = $this->GetInstance($serv);
+							if(class_exists($serv))
+							{
+								if(!$this->HasRegistered($serv))
+								{
+									$this->RegisterClass($serv);
+									if($this->IsAbstract($iface))
+									{
+										$this->RegisterInterfaceByClass($iface, $serv);
+									}
+									if($build)
+									{
+										$instances[] = $this->GetInstance($serv);
+									}
+								}
+							}
+							else
+							{
+								echo "AutoRegistry [$iface]=>[$serv] is not exist.\n";
+							}
 						}
 					}
 				}
-				else
-				{
-					echo "AutoRegistry [$iface]=>[$serv] is not exist.\n";
-				}
 			}
+
 
 			return $instances;
 		}
@@ -179,9 +179,9 @@ namespace DIServer
 		 *
 		 * @return string
 		 */
-		public function GetFrameworkPath()
+		public function GetFrameworkPath($addPath = '')
 		{
-			return $this->frameworkPath;
+			return $this->frameworkPath . $addPath;
 		}
 
 		/**
@@ -203,14 +203,14 @@ namespace DIServer
 		 */
 		protected function bindCoreAliases()
 		{
-			$alias = [
-				'App'    => get_class($this),
-				'Swoole' => \swoole_server::class
-			];
-			foreach($alias as $alia => $type)
-			{
-				$this->SetAlias($alia, $type);
-			}
+			//$alias = [
+			//	'App'    => get_class($this),
+			//	'Swoole' => \swoole_server::class
+			//];
+			//foreach($alias as $alia => $type)
+			//{
+			//	$this->SetAlias($alia, $type);
+			//}
 
 			return $this;
 		}
@@ -222,8 +222,9 @@ namespace DIServer
 		{
 			static::SetInstance($this);
 			$this->bindBaseClass();
-			$this->bindBaseService();
+			$this->AutoRegistry("Application.php");
 			$this->bindCoreAliases();
+			Event::Add('OnMasterStart', [$this, 'RecordPID']);
 			/* @var $bootstrapper \DIServer\Interfaces\IBootstrapper */
 			$bootstrapper = $this->__get(IBootstrapper::class);
 			$bootstrapper->Boot();
@@ -232,9 +233,9 @@ namespace DIServer
 		/**
 		 * @return string
 		 */
-		public function GetBasePath()
+		public function GetBasePath($addPath = '')
 		{
-			return $this->basePath;
+			return $this->basePath . $addPath;
 		}
 
 		/**
@@ -247,8 +248,8 @@ namespace DIServer
 		public function SetBasePath($basePath)
 		{
 			$this->basePath = realpath(rtrim($basePath, '\/'));
-			$this->serverPath = $this->GetBasePath() . '/app/' . $this->GetServerName();
-			$this->commonPath = $this->GetBasePath() . '/app/Common';
+			$this->serverPath = $this->GetBasePath('/app/' . $this->GetServerName());
+			$this->commonPath = $this->GetBasePath('/app/Common');
 
 			return $this;
 		}
@@ -268,14 +269,14 @@ namespace DIServer
 		 *
 		 * @return string
 		 */
-		public function GetServerPath()
+		public function GetServerPath($addPath = '')
 		{
-			return $this->serverPath;
+			return $this->serverPath . $addPath;
 		}
 
-		public function GetCommonPath()
+		public function GetCommonPath($addPath = '')
 		{
-			return $this->commonPath;
+			return $this->commonPath . $addPath;
 		}
 
 		public function  __get($name)
@@ -380,24 +381,24 @@ namespace DIServer
 
 		protected function readPID()
 		{
-			$processPath = $this->GetServerPath() . "/Runtimes/Process/MasterPID";
+			$processPath = $this->GetServerPath("/Runtimes/Process/MasterPID");
 			$pid = false;
 			if(file_exists($processPath))
 			{
 				$pid = file_get_contents($processPath);
 				exec("ps -x|grep $pid", $output);//检查pid是否真的存在
 				$mastProc = current($output);
-				$pid = strpos($mastProc, " $pid") === 0 ? $pid : false;//pid存在
+				$pid = strpos($mastProc, trim($pid)) === 0 ? $pid : false;//pid存在
 				$pid = strpos($mastProc, DI_SERVER_NAME . ".php") !== false ? $pid : false;//进程名是否正确
 			}
 
 			return $pid;
 		}
 
-		protected function recordPID()
+		public function RecordPID()
 		{
 			$pid = posix_getpid();
-			$processPath = $this->GetServerPath() . "/Runtimes/Process/MasterPID";
+			$processPath = $this->GetServerPath("/Runtimes/Process/MasterPID");
 			file_put_contents($processPath, $pid, LOCK_EX);
 		}
 	}
