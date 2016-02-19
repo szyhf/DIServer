@@ -1,23 +1,17 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Back
- * Date: 2015/12/30
- * Time: 14:22
- */
 
 namespace DIServer\Session;
 
-use DIServer\Interfaces\IApplication;
-use DIServer\Services\Session;
-use Symfony\Component\Finder\Finder;
+use DIServer\Interfaces\ISession;
+use DIServer\Services\Application;
+use DIServer\Services\Log;
+use DIServer\Services\Service;
+use DIServer\Helpers\IO;
 
-class File //extends Session
+class File extends Service implements ISession
 {
-	/**
-	 * @var
-	 */
-	protected $fileIO;
+	protected $sessionID = null;
+	protected $session = [];//当前Session服务
 
 	/**
 	 * 会话存储路径
@@ -26,165 +20,230 @@ class File //extends Session
 	 */
 	protected $path;
 
-	public function __construct(IApplication $app)
+	public function __construct()
 	{
-		parent::__construct($app);
-		$this->path = $app->GetServerPath() . '/Runtimes/Session';
+		$this->path = Application::GetServerPath('/Runtimes/Session');
+		// 锁定
+		$lockfile = $this->path . 'build.Runtimes.lock';
+		if(is_writable($lockfile))
+		{
+			return;
+		}
+		else
+		{
+			if(!touch($lockfile))
+			{
+				throw new \Exception('应用目录[' . $this->path . ']不可写，目录无法自动生成！请手动生成项目目录~', 10006);
+			}
+		}
 		if(!is_dir($this->path))
 		{
 			//echo "mkdir($this->path, 0755, true);\n";
 			mkdir($this->path, 0755, true);
 		}
+		// 解除锁定
+		unlink($lockfile);
 	}
 
-	/**
-	 * Close the session
-	 *
-	 * @link  http://php.net/manual/en/sessionhandlerinterface.close.php
-	 * @return bool <p>
-	 *        The return value (usually TRUE on success, FALSE on failure).
-	 *        Note this value is returned internally to PHP for processing.
-	 *        </p>
-	 * @since 5.4.0
-	 */
-	public function close()
+	public function Init()
 	{
-		// TODO: Implement close() method.
-		return true;
-	}
-
-	/**
-	 * Destroy a session
-	 *
-	 * @link  http://php.net/manual/en/sessionhandlerinterface.destroy.php
-	 *
-	 * @param string $session_id The session ID being destroyed.
-	 *
-	 * @return bool <p>
-	 * The return value (usually TRUE on success, FALSE on failure).
-	 * Note this value is returned internally to PHP for processing.
-	 * </p>
-	 * @since 5.4.0
-	 */
-	public function destroy($session_id)
-	{
-		// TODO: Implement destroy() method.
-		//echo "Destory $session_id|n";
-		//
-		//return true;
-
-		return unlink($this->path . "/$session_id");
-	}
-
-	/**
-	 * Cleanup old sessions
-	 *
-	 * @link  http://php.net/manual/en/sessionhandlerinterface.gc.php
-	 *
-	 * @param int $maxlifetime <p>
-	 *                         Sessions that have not updated for
-	 *                         the last maxlifetime seconds will be removed.
-	 *                         </p>
-	 *
-	 * @return bool <p>
-	 * The return value (usually TRUE on success, FALSE on failure).
-	 * Note this value is returned internally to PHP for processing.
-	 * </p>
-	 * @since 5.4.0
-	 */
-	public function gc($maxlifetime)
-	{
-		// TODO: Implement gc() method.
-		$files = Finder::create()
-		               ->in($this->path)
-		               ->files()
-		               ->ignoreDotFiles(true)
-		               ->date('<=now - ' . $maxlifetime . ' seconds');
-
-		/** @var \Symfony\Component\Finder\SplFileInfo $file */
-		foreach($files as $filePath => $fileInfo)
+		//应该在OnMasterStart时调用，清空已有的Session
+		$files = IO::AllFile($this->path);
+		foreach($files as $file)
 		{
-			//echo "gc file:$filePath\n";
-			//var_dump($file);
-			unlink($filePath);
+			unlink($file);
 		}
-
-		return true;
 	}
 
-	/**
-	 * Initialize session
-	 *
-	 * @link  http://php.net/manual/en/sessionhandlerinterface.open.php
-	 *
-	 * @param string $save_path  The path where to store/retrieve the session.
-	 * @param string $session_id The session id.
-	 *
-	 * @return bool <p>
-	 * The return value (usually TRUE on success, FALSE on failure).
-	 * Note this value is returned internally to PHP for processing.
-	 * </p>
-	 * @since 5.4.0
-	 */
-	public function open($save_path, $session_id)
+	public function Reset()
 	{
-		// TODO: Implement open() method.
-
-
-		return true;
+		unset($this->session);
 	}
 
-	/**
-	 * Read session data
-	 *
-	 * @link  http://php.net/manual/en/sessionhandlerinterface.read.php
-	 *
-	 * @param string $session_id The session id to read data for.
-	 *
-	 * @return string <p>
-	 * Returns an encoded string of the read data.
-	 * If nothing was read, it must return an empty string.
-	 * Note this value is returned internally to PHP for processing.
-	 * </p>
-	 * @since 5.4.0
-	 */
-	public function read($session_id)
+	public function Save()
 	{
-		// TODO: Implement read() method.
-		//echo "Session read $this->path/$session_id\n";
-		if(file_exists($this->path . "/$session_id"))
+		$data = serialize($this->session);
+
+		return file_put_contents($this->path . "/$this->sessionID", $data, LOCK_EX);
+	}
+
+	public function Load($sessionID)
+	{
+		$this->sessionID = $sessionID;
+		if(file_exists($this->path . "/$this->sessionID"))
 		{
-			return file_get_contents($this->path . "/$session_id");
+			$this->session = unserialize(file_get_contents($this->path . "/$this->sessionID"));
 		}
+		else
+		{
+			$this->session = [];
+		}
+	}
 
+	public function Destory()
+	{
+		return unlink($this->path . "/$this->sessionID");
+	}
 
-		return '';
+	public function GC()
+	{
+		//尝试进行回收
+		$files = IO::AllFile($this->path);
+		foreach($files as $file)
+		{
+			Log::Debug("$file =" . date('[Y-m-d H:i:s]', fileatime($file)));
+			if(time() - fileatime($file) > 1440)//距离上次被访问超过1440秒之后清空Session
+			{
+				unlink($file);
+			}
+		}
 	}
 
 	/**
-	 * Write session data
+	 * Whether a offset exists
 	 *
-	 * @link  http://php.net/manual/en/sessionhandlerinterface.write.php
+	 * @link  http://php.net/manual/en/arrayaccess.offsetexists.php
 	 *
-	 * @param string $session_id   The session id.
-	 * @param string $session_data <p>
-	 *                             The encoded session data. This data is the
-	 *                             result of the PHP internally encoding
-	 *                             the $_SESSION superglobal to a serialized
-	 *                             string and passing it as this parameter.
-	 *                             Please note sessions use an alternative serialization method.
-	 *                             </p>
+	 * @param mixed $offset <p>
+	 *                      An offset to check for.
+	 *                      </p>
 	 *
-	 * @return bool <p>
-	 * The return value (usually TRUE on success, FALSE on failure).
-	 * Note this value is returned internally to PHP for processing.
+	 * @return boolean true on success or false on failure.
 	 * </p>
-	 * @since 5.4.0
+	 * <p>
+	 * The return value will be casted to boolean if non-boolean was returned.
+	 * @since 5.0.0
 	 */
-	public function write($session_id, $session_data)
+	public function offsetExists($offset)
 	{
-		// TODO: Implement write() method.
-		//echo "Session write $this->path/$session_id >> $session_data\n";
-		return file_put_contents($this->path . "/$session_id", $session_data, LOCK_EX);
+		return $this->Has($offset);
+	}
+
+	/**
+	 * Offset to retrieve
+	 *
+	 * @link  http://php.net/manual/en/arrayaccess.offsetget.php
+	 *
+	 * @param mixed $offset <p>
+	 *                      The offset to retrieve.
+	 *                      </p>
+	 *
+	 * @return mixed Can return all value types.
+	 * @since 5.0.0
+	 */
+	public function offsetGet($offset)
+	{
+		return $this->Get($offset);
+	}
+
+	/**
+	 * Offset to set
+	 *
+	 * @link  http://php.net/manual/en/arrayaccess.offsetset.php
+	 *
+	 * @param mixed $offset <p>
+	 *                      The offset to assign the value to.
+	 *                      </p>
+	 * @param mixed $value  <p>
+	 *                      The value to set.
+	 *                      </p>
+	 *
+	 * @return void
+	 * @since 5.0.0
+	 */
+	public function offsetSet($offset, $value)
+	{
+		$this->Set($offset, $value);
+	}
+
+	/**
+	 * Offset to unset
+	 *
+	 * @link  http://php.net/manual/en/arrayaccess.offsetunset.php
+	 *
+	 * @param mixed $offset <p>
+	 *                      The offset to unset.
+	 *                      </p>
+	 *
+	 * @return void
+	 * @since 5.0.0
+	 */
+	public function offsetUnset($offset)
+	{
+		unset($this->session[$offset]);
+	}
+
+	/**
+	 * 检查是否存在指定的配置项
+	 *
+	 * @param $key
+	 *
+	 * @return mixed
+	 */
+	public function Has($key)
+	{
+		return isset($this->session[$key]);
+	}
+
+	/**
+	 * 获取指定的配置项
+	 *
+	 * @param      $key
+	 * @param null $default
+	 *
+	 * @return mixed
+	 */
+	public function Get($key, $default = null)
+	{
+		return $this->session[$key];
+	}
+
+	/**
+	 * 获取所有的配置
+	 *
+	 * @return array
+	 */
+	public function All()
+	{
+		return $this->session;
+	}
+
+	/**
+	 * 设置指定的配置项
+	 *
+	 * @param      $key
+	 * @param null $value
+	 *
+	 * @return mixed
+	 */
+	public function Set($key, $value)
+	{
+		return $this->session[$key] = $value;
+	}
+
+	/**
+	 * 向指定配置末端添加一个子项
+	 *
+	 * @param $key
+	 * @param $value
+	 *
+	 * @return mixed
+	 */
+	public function Push($key, $value)
+	{
+		return $this->Set($key, $value);
+	}
+
+	/**
+	 * 向指定配置项第一个位置插入一个子项
+	 *
+	 * @param $key
+	 * @param $value
+	 *
+	 * @return mixed
+	 */
+	public function Prepend($key, $value)
+	{
+		return $this->Set($key, $value);
 	}
 }

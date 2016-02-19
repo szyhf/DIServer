@@ -17,8 +17,6 @@ namespace DIServer\Helpers
 			$mydir = dir($directory);
 			if(!$mydir)
 			{
-				DILog("$directory is not exist or available.", 'w');
-
 				return [];
 			}
 			$files = [];

@@ -43,7 +43,7 @@ interface IStorage extends \ArrayAccess
 	 *
 	 * @return mixed
 	 */
-	public function Set($key, $value = null);
+	public function Set($key, $value);
 
 	/**
 	 * 向指定配置末端添加一个子项

@@ -3,9 +3,15 @@
 namespace DIServer\Interfaces;
 
 
-interface ISession
+interface ISession extends IStorage
 {
-	public function Write($sessionID,$data);
-	public function Read($sessionID);
-	public function Destory($sessionID);
+	public function Save();
+
+	public function Load($sessionID);
+
+	public function Destory();
+
+	public function Reset();
+
+	public function GC();
 }
