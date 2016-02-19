@@ -51,5 +51,5 @@ interface ITaskWorkerServer
 	 * @param int            $from_worker_id
 	 * @param string         $message
 	 */
-	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message);
+	public function OnTaskWorkerPipeMessage(\swoole_server $server, $from_worker_id, $message);
 }

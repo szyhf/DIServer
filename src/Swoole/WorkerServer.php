@@ -17,8 +17,6 @@ use DIServer\Services\Service;
  */
 class WorkerServer extends Service implements IWorkerServer
 {
-	protected $dispatcher;
-
 	/**
 	 * 新建了一个Tcp连接时触发
 	 *
@@ -30,7 +28,6 @@ class WorkerServer extends Service implements IWorkerServer
 	{
 		$connectInfo = $server->connection_info($fd, $from_id);
 		Log::Info("Connect from {remote_ip}[$fd] to worker[$server->worker_id]", $connectInfo);
-		Event::Listen('OnConnect', [&$server, &$fd, &$from_id]);
 	}
 
 	/**
@@ -44,8 +41,6 @@ class WorkerServer extends Service implements IWorkerServer
 	{
 		$connectInfo = $server->connection_info($fd, $from_id);
 		Log::Info("Close from {remote_ip}[$fd] to worker[$server->worker_id]", $connectInfo);
-
-		Event::Listen('OnClose', [&$server, &$fd, &$from_id]);
 	}
 
 	/**
@@ -58,7 +53,6 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnReceive(\swoole_server $server, $fd, $from_id, $data)
 	{
-		Event::Listen('OnReceive', [&$server, &$fd, &$from_id, &$data]);
 		/** @var IRequest $request */
 		$request = RequestFactory::Make($fd, $from_id, $data);
 		Event::Listen('OnRequest',[&$server,&$request]);
@@ -74,7 +68,7 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnPacket(\swoole_server $server, $data, $client_info)
 	{
-		Event::Listen('OnPacket', [&$server, &$data, $client_info]);
+
 	}
 
 	/**
@@ -86,9 +80,6 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnWorkerStart(\swoole_server $server, $worker_id)
 	{
 		Log::Notice("On Worker[$worker_id] Start.");
-		$workerStrapps = include Application::GetFrameworkPath() . '/Registry/Worker.php';
-		Application::AutoRegistry($workerStrapps);
-		Event::Listen('OnWorkerStart', [&$server, &$worker_id]);
 	}
 
 	/**
@@ -101,7 +92,7 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnWorkerError(\swoole_server $server, $worker_id, $worker_pid, $exit_code)
 	{
-		Event::Listen('OnWorkerError', [&$server, &$worker_id, &$worker_pid, &$exit_code]);
+
 	}
 
 	/**
@@ -113,7 +104,6 @@ class WorkerServer extends Service implements IWorkerServer
 	public function OnWorkerStop(\swoole_server $server, $worker_id)
 	{
 		Log::Notice("On Worker[$worker_id] Stop.");
-		Event::Listen('OnWorkerStop', [&$server, &$worker_id]);
 	}
 
 	/**
@@ -123,9 +113,8 @@ class WorkerServer extends Service implements IWorkerServer
 	 * @param int            $from_worker_id
 	 * @param string         $message
 	 */
-	public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message)
+	public function OnWorkerPipeMessage(\swoole_server $server, $from_worker_id, $message)
 	{
-		Event::Listen('OnPipeMessage', [&$server, &$from_worker_id, &$message]);
 		Log::Debug("Receive message from $from_worker_id in $server->worker_id.");
 		/** @var \swoole_table $table */
 		//$table = unserialize($message);
@@ -140,6 +129,6 @@ class WorkerServer extends Service implements IWorkerServer
 	 */
 	public function OnFinish(\swoole_server $server, $task_id, $taskResult)
 	{
-		Event::Listen('OnFinish', [&$server, &$task_id, &$taskResult]);
+
 	}
 }

@@ -11,7 +11,7 @@ use DIServer\Services\Service;
  *
  * @author Back
  */
-class ManagerServer extends Service implements IManagerServer
+class ManagerServer implements IManagerServer
 {
 
 	public function OnManagerStart(\swoole_server $server)
@@ -21,7 +21,6 @@ class ManagerServer extends Service implements IManagerServer
 
 	public function OnManagerStop(\swoole_server $server)
 	{
-		Log::Notice("On Manager Stop");
+		//Log::Notice("On Manager Stop");
 	}
-
 }

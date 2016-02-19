@@ -2,28 +2,28 @@
 
 namespace DIServer\Swoole;
 
-use DIServer\Interfaces\Swoole\IMasterServer as IMasterServer;
+use DIServer\Interfaces\Swoole\IMasterServer;
 use DIServer\Services\Log;
-use DIServer\Services\Server;
-use DIServer\Services\Service;
+use DIServer\Services\Session;
 
 /**
  * Description of MasterServer
  *
  * @author Back
  */
-class MasterServer extends Service implements IMasterServer
+class MasterServer implements IMasterServer
 {
 
-	public function OnStart(\swoole_server $server)
+	public function OnMasterStart(\swoole_server $server)
 	{
 		//Log::Notice("On Master Start");
+
+		Session::Init();
 	}
 
-	public function OnShutdown(\swoole_server $server)
+	public function OnMasterShutdown(\swoole_server $server)
 	{
-		Log::Instance()
-		   ->Notice("On Master Shutdown");
+		//Log::Notice("On Master Shutdown");
 	}
 
 

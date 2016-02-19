@@ -13,12 +13,12 @@ use DIServer\Interfaces\IService;
  *
  * @author Back
  */
-interface ISwooleProxy extends IService
+interface ISwooleProxy
 {
 
-    public function OnStart(\swoole_server $server);
+    public function OnMasterStart(\swoole_server $server);
 
-    public function OnShutdown(\swoole_server $server);
+    public function OnMasterShutdown(\swoole_server $server);
 
     public function OnWorkerStart(\swoole_server $server, $worker_id);
 

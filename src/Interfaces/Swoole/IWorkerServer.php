@@ -71,7 +71,7 @@ interface IWorkerServer
      * @param int $from_worker_id
      * @param string $message
      */
-    public function OnPipeMessage(\swoole_server $server, $from_worker_id, $message);
+    public function OnWorkerPipeMessage(\swoole_server $server, $from_worker_id, $message);
 
     /**
      * Task一次工作结束以后，在Worker进程中被触发（如果在Task中执行了Return方法）
