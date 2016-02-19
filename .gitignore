@@ -1,3 +1,4 @@
+/src/DI
+/composer.lock
 /vendor
-composer.lock
-/DI
+/.gitignore
