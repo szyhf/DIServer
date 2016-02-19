@@ -16,7 +16,7 @@ class Application extends Facade
 	 *
 	 * @return string
 	 */
-	public static function GetBasePath()
+	public static function GetBasePath($addPath = '')
 	{
 		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
@@ -26,7 +26,7 @@ class Application extends Facade
 	 *
 	 * @return string
 	 */
-	public static function GetServerPath()
+	public static function GetServerPath($addPath = '')
 	{
 		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
@@ -36,7 +36,7 @@ class Application extends Facade
 	 *
 	 * @return string
 	 */
-	public static function GetFrameworkPath()
+	public static function GetFrameworkPath($addPath = '')
 	{
 		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
@@ -80,7 +80,7 @@ class Application extends Facade
 	 * @throws \DIServer\Container\NotRegistedException
 	 * @throws \DIServer\Container\RegistedException
 	 */
-	public static function AutoRegistry($registry, $build = false)
+	public static function AutoRegistry($registryPath, $build = false)
 	{
 		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
@@ -91,6 +91,18 @@ class Application extends Facade
 	 * @return mixed
 	 */
 	public static function AutoInclude($config)
+	{
+		return static::__callStatic(__FUNCTION__, func_get_args());
+	}
+
+	/**
+	 * 按照惯例顺序获得FrameworkPath、CommonPath、ServerPath
+	 *
+	 * @param $addPath
+	 *
+	 * @return array
+	 */
+	public static function GetConventionPaths($addPath)
 	{
 		return static::__callStatic(__FUNCTION__, func_get_args());
 	}

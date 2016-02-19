@@ -131,9 +131,7 @@ namespace DIServer
 		 */
 		public function AutoRegistry($registryFile, $build = false)
 		{
-			$files[] = $this->GetFrameworkPath("/Registry/$registryFile");
-			$files[] = $this->GetCommonPath("/Registry/$registryFile");
-			$files[] = $this->GetServerPath("/Registry/$registryFile");
+			$files= $this->GetConventionPaths("/Registry/$registryFile");
 			$registry = [];
 			foreach($files as $registryFilePath)
 			{
@@ -143,33 +141,33 @@ namespace DIServer
 					if(is_array($newRegistry))
 					{
 						Ary::MergeRecursive($registry, $newRegistry);
-						$instances = [];
-						foreach($registry as $iface => $serv)
-						{
-							if(class_exists($serv))
-							{
-								if(!$this->HasRegistered($serv))
-								{
-									$this->RegisterClass($serv);
-									if($this->IsAbstract($iface))
-									{
-										$this->RegisterInterfaceByClass($iface, $serv);
-									}
-									if($build)
-									{
-										$instances[] = $this->GetInstance($serv);
-									}
-								}
-							}
-							else
-							{
-								echo "AutoRegistry [$iface]=>[$serv] is not exist.\n";
-							}
-						}
 					}
 				}
 			}
 
+			$instances = [];
+			foreach($registry as $iface => $serv)
+			{
+				if(class_exists($serv))
+				{
+					if(!$this->HasRegistered($serv))
+					{
+						$this->RegisterClass($serv);
+						if($this->IsAbstract($iface))
+						{
+							$this->RegisterInterfaceByClass($iface, $serv);
+						}
+						if($build)
+						{
+							$instances[] = $this->GetInstance($serv);
+						}
+					}
+				}
+				else
+				{
+					echo "AutoRegistry [$iface]=>[$serv] is not exist.\n";
+				}
+			}
 
 			return $instances;
 		}
@@ -252,6 +250,21 @@ namespace DIServer
 			$this->commonPath = $this->GetBasePath('/app/Common');
 
 			return $this;
+		}
+
+		/**
+		 * 获得惯例配置路径组（按顺序为FrameworkPath、CommonPath、ServerPath）
+		 * @param $addPath
+		 *
+		 * @return array
+		 */
+		public function GetConventionPaths($addPath)
+		{
+			return [
+				$this->GetFrameworkPath($addPath),
+				$this->GetCommonPath($addPath),
+				$this->GetServerPath($addPath)
+			];
 		}
 
 		/**
