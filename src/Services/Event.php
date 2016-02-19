@@ -26,8 +26,7 @@ class Event extends Facade
 		//$file = str_replace(self::GetAppStatic()
 		//                        ->GetFrameworkPath(), '', $caller['file']);
 		//Log::Debug("Add tag '$tag' in $file on line {$caller['line']}");
-		self::getFacadeRoot()
-		    ->Add($tag, $behavior);
+		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
 
 	/**
@@ -38,8 +37,7 @@ class Event extends Facade
 	 */
 	public static function AddRange($tag, array $behaviors)
 	{
-		self::getFacadeRoot()
-		    ->AddRange($tag, $behaviors);
+		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
 
 	/**
@@ -51,8 +49,7 @@ class Event extends Facade
 	 */
 	public static function Get($tag = null)
 	{
-		self::getFacadeRoot()
-		    ->Get($tag);
+		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
 
 	/**
@@ -67,7 +64,6 @@ class Event extends Facade
 		//建议调用前先写部分过滤
 		//$caller = current(debug_backtrace());
 		//Log::Debug("Listen to '$tag' in {$caller['file']} on line {$caller['line']}");
-		self::getFacadeRoot()
-		    ->Listen($tag, $params);
+		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
 }

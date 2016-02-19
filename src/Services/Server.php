@@ -7,7 +7,7 @@ use DIServer\Interfaces\IApplication;
 
 class Server extends Facade
 {
-	const SendFileLimit = 2097152;//大于2MB的数据应使用SendFile接口发送
+	const SendFileLimit = 0x200000;//大于2MB的数据应使用SendFile接口发送
 
 	protected static function getFacadeAccessor()
 	{
