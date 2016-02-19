@@ -94,7 +94,7 @@ class SwooleTable implements IMonitor
 			'ConnectingNum'   => $this->server->stats()['connection_num'],
 			'AcceptCount'     => $this->server->stats()['accept_count'],
 			'CloseCount'      => $this->server->stats()['close_count'],
-			//'TaskingNum'      => $this->server->stats()['tasking_num'],
+			'TaskingNum'      => $this->server->stats()['tasking_num'],
 		];
 		$TaskingNum = 0;
 		$workers = [];
@@ -118,7 +118,7 @@ class SwooleTable implements IMonitor
 			//$base["Worker[$i]LastTaskerID"]=>$this->GEt
 		}
 		$base['TaskWorker'] = $taskWorkers;
-		//$base['MonitorRowCount'] = count($this->table);
+		$base['MonitorRowCount'] = count($this->table);
 		//foreach($this->table as $key => $row)
 		//{
 		//	$base['MonitorKeys'][$key] = $row['Num'];
@@ -141,8 +141,10 @@ class SwooleTable implements IMonitor
 
 	public function TaskFinished(\swoole_server $server, $task_id, $from_id, $param)
 	{
-		////记录指定的TaskWorker完成了的任务数
+		//记录指定的TaskWorker完成了的任务数
 		$this->Incr($this->taskFinishCountField($server->worker_id));
+		//记录当前Worker投递后被完成的任务数(放在OnFinish回调中会导致内存泄漏）
+		$this->Incr($this->workerFinishedTaskField($from_id));
 	}
 
 	public function OnFinish(\swoole_server $server, $task_id, $taskResult)
