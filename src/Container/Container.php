@@ -106,7 +106,7 @@ class Container implements IContainer
 	{
 		//对单例的保护，禁止深度复制
 	}
-		
+
 	private function __sleep()
 	{
 		//对单例的保护，禁止serialize
@@ -754,10 +754,14 @@ class Container implements IContainer
 		if(!interface_exists($abstract))
 		{
 			//如果是抽象类也可以接受
-			try{
+			try
+			{
 				$refClass = new \ReflectionClass($abstract);
+
 				return $refClass->isAbstract();
-			}catch (\ReflectionException $ex){
+			}
+			catch(\ReflectionException $ex)
+			{
 
 			}
 		}
@@ -765,6 +769,7 @@ class Container implements IContainer
 		{
 			return true;
 		}
+
 		return false;
 	}
 

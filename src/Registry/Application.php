@@ -7,5 +7,5 @@ return [
 	\DIServer\Interfaces\Swoole\ISwooleProxy::class   => \DIServer\Swoole\SwooleProxy::class,
 	\DIServer\Interfaces\Swoole\IMasterServer::class  => \DIServer\Swoole\MasterServer::class,
 	\DIServer\Interfaces\Swoole\IManagerServer::class => \DIServer\Swoole\ManagerServer::class,
-	\DIServer\Interfaces\ISession::class              => DIServer\Session\Files::class
+	\DIServer\Interfaces\ISession::class              => DIServer\Session\File::class
 ];

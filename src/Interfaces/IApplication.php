@@ -53,14 +53,16 @@ interface IApplication extends IContainer
 
 	/**
 	 * 自动注册（快捷工具）
+
 	 *
-	 * @param            $registry
+*@param                  $registryPath
 	 * @param bool|false $build
+
 	 *
-	 * @return array
+*@return array
 	 * @throws \DIServer\Container\NotExistException
 	 * @throws \DIServer\Container\NotRegistedException
 	 * @throws \DIServer\Container\RegistedException
 	 */
-	public function AutoRegistry($registry, $build = false);
+	public function AutoRegistry($registryPath, $build = false);
 }
