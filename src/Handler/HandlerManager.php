@@ -9,7 +9,7 @@ use DIServer\Services\Application;
 
 class HandlerManager implements IHandlerManager
 {
-	
+	protected $handlers = [];
 	public function GetHandlerByID($handlerID)
 	{
 		return $this->handlers[$handlerID];

@@ -4,8 +4,10 @@ namespace DIServer\Handler;
 
 use DIServer\Interfaces\IApplication;
 use DIServer\Interfaces\IHandler;
+use DIServer\Interfaces\IMiddleware;
 use DIServer\Interfaces\IRequest;
-use DIServer\Services\Event;
+use DIServer\Services\Container;
+use DIServer\Pipeline\Base as Pipeline;
 use DIServer\Services\Log;
 use DIServer\Services\Service;
 
@@ -13,10 +15,37 @@ abstract class Base extends Service implements IHandler
 {
 	private $_startTime;
 	private $_endTime;
+	/**
+	 * @var \Closure 处理Request的封装函数（根据Middleware和Handler生成）
+	 */
+	protected $dispatchRequestClosure;
 
 	public function __construct()
 	{
+		$pipeline = new Pipeline();
+		$middlewareClasses = $this->GetMiddlewares();
+		$middlewareHandlers = [];
+		foreach($middlewareClasses as $middlewareClass)
+		{
+			$refClass = new \ReflectionClass($middlewareClass);
+			if(!$refClass->isSubclassOf(IMiddleware::class))
+			{
+				Log::Debug("Try to load $middlewareClass in " . get_class($this) . " but is not instance of IMiddleware");
+				continue;
+			}
+			$middlewareHandlers[] = Container::BuildWithClass($middlewareClass);
+		}
+		$this->dispatchRequestClosure = $pipeline->Through($middlewareHandlers)
+		                                         ->Prepared(function ($request)
+		                                         {
+			                                         //最后一层封装为Handler的默认Handle方法
+			                                         return Container::CallMethod($this, 'Handle', ['request' => $request]);
+		                                         });
+	}
 
+	public function DispatchRequest($request)
+	{
+		call_user_func($this->dispatchRequestClosure, $request);
 	}
 
 	public function BeforeHandle(IRequest $request)
@@ -33,10 +62,9 @@ abstract class Base extends Service implements IHandler
 		}
 	}
 
-	public function GetFilters()
+	public function GetMiddlewares()
 	{
 		return [
-			\DIServer\Filter\Login::class
 		];
 	}
 }

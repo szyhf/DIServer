@@ -2,7 +2,6 @@
 
 namespace DIServer\Dispatcher;
 
-
 use DIServer\Interfaces\IDispatcher;
 use DIServer\Interfaces\IRequest;
 use DIServer\Interfaces\IHandler;
@@ -34,10 +33,8 @@ class WorkerDispatcher extends Service implements IDispatcher
 				/** @var IHandler $handler */
 				foreach($handlers as $handler)
 				{
-
-					$filters = $handler->GetFilters();
 					$handler->BeforeHandle($request);
-					$handler->Handle($request);
+					$handler->DispatchRequest($request);
 					$handler->AfterHandle($request);
 				}
 			}

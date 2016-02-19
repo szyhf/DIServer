@@ -2,9 +2,11 @@
 
 namespace DIServer\MiddleWare;
 
+use DIServer\Services\Event;
 use DIServer\Services\Log;
 use DIServer\Interfaces\IMiddleware;
 use DIServer\Interfaces\IRequest;
+use DIServer\Services\Session as SessionService;
 
 class Session implements IMiddleware
 {
@@ -15,14 +17,19 @@ class Session implements IMiddleware
 	 */
 	public function Handle(IRequest $request, \Closure $next)
 	{
-		Log::Debug('Session Middleware Start');
-		//\DIServer\Services\Session::Start($request->GetFD());
+		//Log::Debug('Session Middleware Start');
+		SessionService::Start($request->GetFD());
 
 		$response = $next($request);
 
-		Log::Debug('Session Middleware Close');
-		//\DIServer\Services\Session::Close($request->GetFD());
+		//Log::Debug('Session Middleware Close');
+		SessionService::Close();
 
 		return $response;
+	}
+
+	public function Bind()
+	{
+		Event::Add(['OnClose'],[$this,'']);
 	}
 }

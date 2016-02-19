@@ -16,14 +16,14 @@ class Authentication implements IMiddleware
 	public function Handle(IRequest $request, \Closure $next)
 	{
 		// TODO: Implement Handle() method.
-		if(rand(0, 100) > 80)
+		//if(rand(0, 100) > 80)
 		{
 			call_user_func($next, $request);
 		}
-		else
-		{
-			Log::Debug("Auth failed.");
-		}
+		//else
+		//{
+		//	Log::Debug("Auth failed.");
+		//}
 
 	}
 }
