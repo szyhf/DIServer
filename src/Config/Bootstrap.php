@@ -4,6 +4,5 @@ return [
 	\DIServer\Bootstraps\CheckEnvironment::class,
 	\DIServer\Bootstraps\DetectEnvironment::class,
 	//\DIServer\Bootstraps\AutoBuilder::class,
-	\DIServer\Bootstraps\LoadBaseConfig::class,
 	\DIServer\Bootstraps\InitSwooleServer::class,
 ];
