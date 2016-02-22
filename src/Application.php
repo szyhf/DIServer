@@ -8,6 +8,7 @@ namespace DIServer
 	use DIServer\Helpers\IO;
 	use DIServer\Interfaces\IApplication;
 	use \DIServer\Interfaces\IBootstrapper;
+	use DIServer\Services\Bootstrapper;
 	use DIServer\Services\Event;
 
 	/**
@@ -131,7 +132,7 @@ namespace DIServer
 		 */
 		public function AutoRegistry($registryFile, $build = false)
 		{
-			$files= $this->GetConventionPaths("/Registry/$registryFile");
+			$files = $this->GetConventionPaths("/Registry/$registryFile");
 			$registry = [];
 			foreach($files as $registryFilePath)
 			{
@@ -150,17 +151,19 @@ namespace DIServer
 			{
 				if(class_exists($serv))
 				{
-					if(!$this->HasRegistered($serv))
+					if($this->HasRegistered($iface))
 					{
-						$this->RegisterClass($serv);
-						if($this->IsAbstract($iface))
-						{
-							$this->RegisterInterfaceByClass($iface, $serv);
-						}
-						if($build)
-						{
-							$instances[] = $this->GetInstance($serv);
-						}
+						//使用新的服务实现替代旧的服务实现（在后续作用域生效）
+						$this->Unregister($iface);
+					}
+					$this->RegisterClass($serv);
+					if($this->IsAbstract($iface))
+					{
+						$this->RegisterInterfaceByClass($iface, $serv);
+					}
+					if($build)
+					{
+						$instances[] = $this->GetInstance($serv);
 					}
 				}
 				else
@@ -223,9 +226,7 @@ namespace DIServer
 			$this->AutoRegistry("Application.php");
 			$this->bindCoreAliases();
 			Event::Add('OnMasterStart', [$this, 'RecordPID']);
-			/* @var $bootstrapper \DIServer\Interfaces\IBootstrapper */
-			$bootstrapper = $this->__get(IBootstrapper::class);
-			$bootstrapper->Boot();
+			Bootstrapper::Boot();
 		}
 
 		/**
@@ -254,6 +255,7 @@ namespace DIServer
 
 		/**
 		 * 获得惯例配置路径组（按顺序为FrameworkPath、CommonPath、ServerPath）
+		 *
 		 * @param $addPath
 		 *
 		 * @return array
@@ -308,48 +310,56 @@ namespace DIServer
 		protected function handleTest()
 		{
 			\define('DI_DAEMONIZE', 0);;
-			if($pid = $this->readPID())
+			if($this->getPIDLock())
 			{
-				echo DI_SERVER_NAME . " has already run, master pid = $pid." . PHP_EOL;
+				//$this->recordPID();
+				$this->Start();
 			}
 			else
 			{
-				$this->recordPID();
-				$this->Start();
+				$pid = $this->readPID();
+				echo DI_SERVER_NAME . " has already running, master pid = $pid." . PHP_EOL;
 			}
 		}
 
 		protected function handleStart()
 		{
 			\define('DI_DAEMONIZE', 1);;
-			if($pid = $this->readPID())
+			if($this->getPIDLock())
 			{
-				echo DI_SERVER_NAME . " has already run, master pid = $pid." . PHP_EOL;
+				//$this->recordPID();
+				$this->Start();
 			}
 			else
 			{
-				$this->recordPID();
-				$this->Start();
+				$pid = $this->readPID();
+				echo DI_SERVER_NAME . " has already running, master pid = $pid." . PHP_EOL;
 			}
 		}
 
 		protected function handleReload()
 		{
-			if($pid = $this->readPID())
+			if($this->getPIDLock())
 			{
-				posix_kill($pid, SIGUSR1);
-				echo "Try kill -10 to $pid." . PHP_EOL;
+				echo DI_SERVER_NAME . " is not running." . PHP_EOL;
 			}
 			else
 			{
-				echo DI_SERVER_NAME . " is not running." . PHP_EOL;
+				$pid = $this->readPID();
+				posix_kill($pid, SIGUSR1);
+				echo "Try kill -10(SIGUSR1) to $pid." . PHP_EOL;
 			}
 		}
 
 		protected function handleStop()
 		{
-			if($pid = $this->readPID())
+			if($this->getPIDLock())
 			{
+				echo DI_SERVER_NAME . " is not running." . PHP_EOL;
+			}
+			else
+			{
+				$pid = $this->readPID();
 				//exec("kill -15 $pid");
 				posix_kill($pid, SIGTERM);
 				echo "Try kill -15(SIGTERM) to $pid." . PHP_EOL;
@@ -374,21 +384,14 @@ namespace DIServer
 
 		protected function handleStatus()
 		{
-			if($pid = $this->readPID())
+			if($this->getPIDLock())
 			{
-				exec("pstree -ap|grep " . DI_SERVER_NAME . ".php", $output);
-				foreach($output as $out)
-				{
-					if(strpos($out, 'status') !== false)
-					{
-						break;
-					}
-					if(strpos($out, 'grep') !== false)
-					{
-						break;
-					}
-					echo $out . PHP_EOL;
-				}
+				echo DI_SERVER_NAME . " is not running." . PHP_EOL;
+			}
+			else
+			{
+				$pid = $this->readPID();
+				echo DI_SERVER_NAME . " is running, master pid = $pid." . PHP_EOL;
 			}
 		}
 
@@ -402,7 +405,7 @@ namespace DIServer
 				exec("ps -x|grep $pid", $output);//检查pid是否真的存在
 				$mastProc = current($output);
 				$pid = strpos($mastProc, trim($pid)) === 0 ? $pid : false;//pid存在
-				$pid = strpos($mastProc, DI_SERVER_NAME . ".php") !== false ? $pid : false;//进程名是否正确
+				//$pid = strpos($mastProc, DI_SERVER_NAME . ".php") !== false ? $pid : false;//进程名是否正确
 			}
 
 			return $pid;
@@ -410,9 +413,39 @@ namespace DIServer
 
 		public function RecordPID()
 		{
-			$pid = posix_getpid();
-			$processPath = $this->GetServerPath("/Runtimes/Process/MasterPID");
-			file_put_contents($processPath, $pid, LOCK_EX);
+			/** @var \swoole_server $server */
+			$server = $this->GetInstance(\swoole_server::class);
+			//通过swoole内置方法获取Master Pid，防止方法在其它进程被误用导致记录pid出错
+			if($pid = $server->master_pid)
+			{
+				$pidLock = $this->getPIDLock();
+				ftruncate($pidLock, 0);      // truncate file​
+				fwrite($pidLock, $pid);//写入当前进程pid（应在Master进程中调用）
+				fflush($pidLock);
+			}
+		}
+
+		protected function getPIDLock()
+		{
+			if($this->pidLock)
+			{
+				return $this->pidLock;
+			}
+			else
+			{
+				$pid_file = $this->GetServerPath("/Runtimes/Process/MasterPID");
+				$fp = fopen($pid_file, 'r+');
+				if(flock($fp, LOCK_EX | LOCK_NB))
+				{
+					$this->pidLock = $fp;
+
+					return $this->pidLock;
+				}
+				else
+				{
+					return false;
+				}
+			}
 		}
 	}
 }
