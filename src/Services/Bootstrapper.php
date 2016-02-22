@@ -11,18 +11,23 @@ namespace DIServer\Services
 	 *
 	 * @package DIServer\Services
 	 */
-	class Bootstrapper extends Service
+	class Bootstrapper extends Facade
 	{
+		protected static function getFacadeAccessor()
+		{
+			return \DIServer\Interfaces\IBootstrapper::class;
+		}
+
 		/**
 		 * 执行启动器
 		 */
-		public function Boot()
+		public static function Boot()
 		{
-			$bootstraps = $this->initBootstraps();
-			$this->bootWithBootstraps($bootstraps);
+			$bootstraps = self::initBootstraps();
+			self::bootWithBootstraps($bootstraps);
 		}
 
-		protected function initBootstraps()
+		protected static function initBootstraps()
 		{
 			/**
 			 * DIServer默认启动器配置目录。
@@ -30,7 +35,7 @@ namespace DIServer\Services
 			return include Application::GetFrameworkPath() . '/Config/Bootstrap.php';
 		}
 
-		protected function bootWithBootstraps(array $bootstraps = [])
+		protected static function bootWithBootstraps(array $bootstraps = [])
 		{
 			foreach($bootstraps as $boot)
 			{

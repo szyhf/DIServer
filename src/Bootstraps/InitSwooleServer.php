@@ -3,7 +3,6 @@
 namespace DIServer\Bootstraps;
 
 use DIServer\Services\Application;
-use DIServer\Services\Bootstrap;
 use DIServer\Interfaces\Swoole\ISwooleProxy;
 
 /**

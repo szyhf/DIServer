@@ -2,8 +2,6 @@
 
 namespace DIServer\Bootstraps;
 
-use DIServer\Services\Bootstrap;
-
 /**
  * 检查运行环境
  *
