@@ -63,54 +63,6 @@ namespace DIServer
 			return $this->handleArgs($args);
 		}
 
-		protected function handleArgs($args)
-		{
-			$commond = isset($args[1]) ? $args[1] : "help";
-			switch(strtolower($commond))//兼容一下大小写
-			{
-				case 'start':
-				{
-					$this->handleStart();
-					break;
-				}
-				case 'test':
-				{
-					$this->handleTest();
-					break;
-				}
-				case 'stop':
-				{
-					$this->handleStop();
-					break;
-				}
-				case 'restart':
-				{
-					$this->handleRestart();
-					break;
-				}
-				case 'reload':
-				{
-					$this->handleReload();
-					break;
-				}
-				case 'status':
-				{
-					$this->handleStatus();
-					break;
-				}
-				case 'help':
-				default:
-				{
-					echo "可选参数如下：" . PHP_EOL;
-					echo "start:   以守护进程的方式启动服务。" . PHP_EOL;
-					echo "test:    以交互进程的方式启动服务。" . PHP_EOL;
-					echo "stop:    柔性停止当前服务的守护进程（可能需要用户权限，仅完成正在进行的Worker\Task后退出）。" . PHP_EOL;
-					echo "reload:  热重载Worker/Task进程（可能需要用户权限）。" . PHP_EOL;
-					echo "restart: 柔性重启当前服务（可能需要用户权限，5s超时）。" . PHP_EOL;
-					echo "status:  查看当前服务的运行状态（可能需要用户权限）。" . PHP_EOL;
-				}
-			}
-		}
 
 		protected function bindBaseClass()
 		{
@@ -307,12 +259,67 @@ namespace DIServer
 			}
 		}
 
+		protected function handleArgs($args)
+		{
+			$commond = isset($args[1]) ? $args[1] : "help";
+			switch(strtolower($commond))//兼容一下大小写
+			{
+				case 'start':
+				{
+					$this->handleStart();
+					break;
+				}
+				case 'test':
+				{
+					$this->handleTest();
+					break;
+				}
+				case 'stop':
+				{
+					$this->handleStop();
+					break;
+				}
+				case 'kill':
+				{
+					$this->handleKill();
+					break;
+				}
+				case 'restart':
+				{
+					$this->handleRestart();
+					break;
+				}
+				case 'reload':
+				{
+					$this->handleReload();
+					break;
+				}
+				case 'status':
+				{
+					$this->handleStatus();
+					break;
+				}
+				case 'help':
+				default:
+				{
+					//echo "命令格式：[Path to PHP]php {ServerName} {Param}". PHP_EOL;
+					echo "可选参数如下（不区分大小写）：" . PHP_EOL;
+					echo "start:   以守护进程的方式启动服务。" . PHP_EOL;
+					echo "test:    以交互进程的方式启动服务。" . PHP_EOL;
+					echo "stop:    柔性停止当前服务的守护进程（可能需要用户权限，仅完成正在进行的Worker\Task后退出）。" . PHP_EOL;
+					echo "kill:    强制停止当前服务的守护进程（可能需要用户权限，适用于服务严重阻塞导致stop无效的情况）。" . PHP_EOL;
+					echo "reload:  热重载Worker/Task进程（可能需要用户权限）。" . PHP_EOL;
+					echo "restart: 柔性重启当前服务（可能需要用户权限，5s超时）。" . PHP_EOL;
+					echo "status:  查看当前服务的运行状态（可能需要用户权限）。" . PHP_EOL;
+				}
+			}
+		}
+
 		protected function handleTest()
 		{
 			\define('DI_DAEMONIZE', 0);;
 			if($this->getPIDLock())
 			{
-				//$this->recordPID();
 				$this->Start();
 			}
 			else
@@ -327,7 +334,6 @@ namespace DIServer
 			\define('DI_DAEMONIZE', 1);;
 			if($this->getPIDLock())
 			{
-				//$this->recordPID();
 				$this->Start();
 			}
 			else
@@ -347,7 +353,7 @@ namespace DIServer
 			{
 				$pid = $this->readPID();
 				posix_kill($pid, SIGUSR1);
-				echo "Try kill -10(SIGUSR1) to $pid." . PHP_EOL;
+				echo "Try kill -10(SIGUSR1) to process $pid." . PHP_EOL;
 			}
 		}
 
@@ -360,9 +366,35 @@ namespace DIServer
 			else
 			{
 				$pid = $this->readPID();
-				//exec("kill -15 $pid");
 				posix_kill($pid, SIGTERM);
-				echo "Try kill -15(SIGTERM) to $pid." . PHP_EOL;
+				echo "Try kill -15(SIGTERM) to process $pid." . PHP_EOL;
+			}
+		}
+
+		protected function handleKill()
+		{
+			if($this->getPIDLock())
+			{
+				echo DI_SERVER_NAME . " is not running." . PHP_EOL;
+			}
+			else
+			{
+				$pid = $this->readPID();
+				$cmd = "ps -x|egrep \"" . DI_SERVER_NAME . ".php\"|awk '{print $1}'" . PHP_EOL;
+				exec($cmd, $output);
+				if(array_search($pid, $output) !== false)
+				{
+					foreach($output as $pid)
+					{
+						echo "Try kill -9(SIGKILL) to process $pid." . PHP_EOL;
+						posix_kill($pid, SIGKILL);
+					}
+				}
+				else
+				{
+					echo "Can't find server's pid." . PHP_EOL;
+				}
+
 			}
 		}
 
@@ -371,14 +403,14 @@ namespace DIServer
 			//尝试5次，每次等待1s，避免程序锁死
 			for($i = 0; $i < 5; $i++)
 			{
-				$this->handleStop();
-				sleep(1);
-				if(!$pid = $this->readPID())
+				if($this->getPIDLock())
 				{
-					$this->handleTest();
+					$this->handleStart();
 
 					return;
 				}
+				$this->handleStop();
+				sleep(1);
 			}
 		}
 
