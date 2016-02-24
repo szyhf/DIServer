@@ -1,7 +1,8 @@
 Event::Listen('OnMasterStart', [&$server]);
 Event::Listen('OnMasterShutdown',[&$server]);
 
-Event::Listen('OnManagerStart',)
+Event::Listen('OnManagerStart', [&$server]);
+Event::Listen('OnManagerStop', [&$server]);
 
 Event::Listen('OnConnect', [&$server, &$fd, &$from_id]);
 Event::Listen('OnReceive', [&$server, &$fd, &$from_id, &$data]);
@@ -14,8 +15,9 @@ Event::Listen('OnWorkerStop', [&$server, &$worker_id]);
 Event::Listen('OnWorkerPipeMessage', [&$server, &$from_worker_id, &$message]);
 Event::Listen('OnFinish', [&$server, &$task_id, &$taskResult]);//触发swoole.onfinish时间需要在task进程中调用server.finish方法，但使用finish时会出现内存泄漏，疑似swoole本身bug，慎用。（swoole.version=1.8.1）
 
-Event::Listen('OnTaskWorkerStart', [&$server, &$task_worker_id]);
 Event::Listen('OnTaskReceived', [&$server, &$task_id, &$from_id, &$param]);
 Event::Listen('OnTaskFinished',[&$server, &$task_id, &$from_id, &$param]);
-Event::Listen('OnTaskWorkerError', [&$server, &$task_worker_id, &$task_worker_pid, $exit_code]);
+Event::Listen('OnTaskWorkerStart', [&$server, &$task_worker_id]);
 Event::Listen('OnTaskWorkerPipeMessage', [$server, $from_worker_id, $message]);
+Event::Listen('OnTaskWorkerError', [&$server, &$task_worker_id, &$task_worker_pid, $exit_code]);
+Event::Listen('OnTaskWorkerStop', [&$server, &$worker_id]);
