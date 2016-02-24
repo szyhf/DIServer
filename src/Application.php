@@ -33,6 +33,8 @@ namespace DIServer
 		protected $commonPath;
 
 		/**
+		 * 框架目录
+		 *
 		 * @var string
 		 */
 		protected $frameworkPath;
@@ -62,7 +64,6 @@ namespace DIServer
 
 			return $this->handleArgs($args);
 		}
-
 
 		protected function bindBaseClass()
 		{
@@ -103,14 +104,17 @@ namespace DIServer
 			{
 				if(class_exists($serv))
 				{
-					if($this->HasRegistered($iface))
+					if(!$this->HasRegistered($serv))
 					{
-						//使用新的服务实现替代旧的服务实现（在后续作用域生效）
-						$this->Unregister($iface);
+						$this->RegisterClass($serv);
 					}
-					$this->RegisterClass($serv);
 					if($this->IsAbstract($iface))
 					{
+						if($this->HasRegistered($iface))
+						{
+							//使用新的服务实现替代旧的服务实现（在后续作用域生效）
+							$this->Unregister($iface);
+						}
 						$this->RegisterInterfaceByClass($iface, $serv);
 					}
 					if($build)
@@ -182,6 +186,8 @@ namespace DIServer
 		}
 
 		/**
+		 * 获取当前目录（入口目录）
+		 *
 		 * @return string
 		 */
 		public function GetBasePath($addPath = '')
@@ -241,6 +247,13 @@ namespace DIServer
 			return $this->serverPath . $addPath;
 		}
 
+		/**
+		 * 获取公共目录
+		 *
+		 * @param string $addPath
+		 *
+		 * @return string
+		 */
 		public function GetCommonPath($addPath = '')
 		{
 			return $this->commonPath . $addPath;
@@ -302,15 +315,18 @@ namespace DIServer
 				case 'help':
 				default:
 				{
-					//echo "命令格式：[Path to PHP]php {ServerName} {Param}". PHP_EOL;
-					echo "可选参数如下（不区分大小写）：" . PHP_EOL;
-					echo "start:   以守护进程的方式启动服务。" . PHP_EOL;
-					echo "test:    以交互进程的方式启动服务。" . PHP_EOL;
-					echo "stop:    柔性停止当前服务的守护进程（可能需要用户权限，仅完成正在进行的Worker\Task后退出）。" . PHP_EOL;
-					echo "kill:    强制停止当前服务的守护进程（可能需要用户权限，适用于服务严重阻塞导致stop无效的情况）。" . PHP_EOL;
-					echo "reload:  热重载Worker/Task进程（可能需要用户权限）。" . PHP_EOL;
-					echo "restart: 柔性重启当前服务（可能需要用户权限，5s超时）。" . PHP_EOL;
-					echo "status:  查看当前服务的运行状态（可能需要用户权限）。" . PHP_EOL;
+					$colorPrefix = "\033[0m";
+					$colorSuffix = "\033[0m";
+					echo "Usage: [path to php]php <file> {command}" . PHP_EOL;
+					echo "Support command (ignore case):" . PHP_EOL;
+					echo "\t{$colorPrefix}start{$colorSuffix}   :Run as daemon." . PHP_EOL;
+					echo "\t{$colorPrefix}test{$colorSuffix}    :Run as shell." . PHP_EOL;
+					echo "\t{$colorPrefix}stop{$colorSuffix}    :Flexible stop the daemon process of current server." . PHP_EOL;
+					echo "\t{$colorPrefix}kill{$colorSuffix}    :Force stop the daemon process of current server." . PHP_EOL;
+					echo "\t{$colorPrefix}reload{$colorSuffix}  :Reload worker/task worker process." . PHP_EOL;
+					echo "\t{$colorPrefix}restart{$colorSuffix} :Flexible restart current server." . PHP_EOL;
+					echo "\t{$colorPrefix}status{$colorSuffix}  :Show the server status." . PHP_EOL;
+					echo "\t{$colorPrefix}build{$colorSuffix}   :Auto build base directory and files of " . DI_SERVER_NAME . PHP_EOL;
 				}
 			}
 		}
@@ -381,7 +397,7 @@ namespace DIServer
 			{
 				$pid = $this->readPID();
 				$cmd = "ps -x|egrep \"" . DI_SERVER_NAME . ".php\"|awk '{print $1}'" . PHP_EOL;
-				exec($cmd, $output);
+				exec($cmd, $output);//检查pid是否真的存在
 				if(array_search($pid, $output) !== false)
 				{
 					foreach($output as $pid)
@@ -389,12 +405,8 @@ namespace DIServer
 						echo "Try kill -9(SIGKILL) to process $pid." . PHP_EOL;
 						posix_kill($pid, SIGKILL);
 					}
+					return $pid;
 				}
-				else
-				{
-					echo "Can't find server's pid." . PHP_EOL;
-				}
-
 			}
 		}
 
@@ -434,7 +446,16 @@ namespace DIServer
 			if(file_exists($processPath))
 			{
 				$pid = file_get_contents($processPath);
-				exec("ps -x|grep $pid", $output);//检查pid是否真的存在
+				$cmd = "ps -x|egrep \"" . DI_SERVER_NAME . ".php\"|awk '{print $1}'" . PHP_EOL;
+				exec($cmd, $output);//检查pid是否真的存在
+				if(array_search($pid, $output) !== false)
+				{
+					return $pid;
+				}
+				else
+				{
+					return false;
+				}
 				$mastProc = current($output);
 				$pid = strpos($mastProc, trim($pid)) === 0 ? $pid : false;//pid存在
 				//$pid = strpos($mastProc, DI_SERVER_NAME . ".php") !== false ? $pid : false;//进程名是否正确
