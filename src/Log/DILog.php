@@ -6,12 +6,27 @@ use DIServer\Interfaces\ILog;
 
 class DILog implements ILog
 {
+	private $_workerID = -1;
+
 	/**
 	 * @return \swoole_server
 	 */
 	protected function getCurrentSwoole()
 	{
 		return Container::GetInstance(\swoole_server::class);
+	}
+
+	private function _getWorkerID()
+	{
+		if($this->_workerID === -1)
+		{
+			if(Container::IsRegistered(\swoole_server::class))
+			{
+				$this->_workerID = Container::GetInstance(\swoole_server::class)->worker_id;
+			}
+		}
+
+		return $this->_workerID;
 	}
 
 	/**
@@ -29,8 +44,8 @@ class DILog implements ILog
 		//echo $fileInfo;
 		if(DI_DAEMONIZE)
 		{
-			$msg = str_replace("\n", "\\n", $msg);
-			echo $fileInfo . date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . "][" . $this->getCurrentSwoole()->worker_id . "] " . $msg . "\n";
+			//$msg = str_replace("\n", "\r", $msg);
+			echo $fileInfo . date("[Y-m-d H:i:s]") . "[{$level}][" . posix_getpid() . "] " . $msg . "\n";
 		}
 		else
 		{
@@ -225,7 +240,7 @@ class DILog implements ILog
 		{
 			if(is_array($set))
 			{
-				$settings .= str_pad($key, $longestKey + 1, ' ', STR_PAD_RIGHT) . "=> \n\t" . trim(str_replace(PHP_EOL, PHP_EOL . "\t", static::formatArray($set))) . PHP_EOL;
+				$settings .= str_pad($key, $longestKey + 1 + 4, ' ', STR_PAD_RIGHT) . "=> \n\t" . trim(str_replace(PHP_EOL, PHP_EOL . "\t", static::formatArray($set))) . PHP_EOL;
 			}
 			else
 			{
@@ -252,6 +267,10 @@ class DILog implements ILog
 		$replace = [];
 		foreach($context as $key => $val)
 		{
+			if(is_array($val))
+			{
+				$val = self::formatMessage($val);
+			}
 			$replace['{' . $key . '}'] = $val;
 		}
 
