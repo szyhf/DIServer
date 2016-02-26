@@ -123,9 +123,9 @@ class Server extends Facade
 	{
 		/** @var \swoole_server $instance */
 		$instance = self::getFacadeRoot();
-		Event::Listen('TaskWillSend', [$data, $taskWorkerID]);
+		Event::Listen('OnTaskWillSend', [$data, $taskWorkerID]);
 		$taskID = $instance->task($data, $taskWorkerID);
-		Event::Listen('TaskSent', [$data, $taskID, $taskWorkerID]);
+		Event::Listen('OnTaskSent', [$data, $taskID, $taskWorkerID]);
 
 		return $taskID;
 	}
@@ -145,5 +145,21 @@ class Server extends Facade
 		/** @var \swoole_server $instance */
 		$instance = self::getFacadeRoot();
 		$instance->reload();
+	}
+
+	public static function AddProcess(\swoole_process $process)
+	{
+		/** @var \swoole_server $instance */
+		$instance = self::getFacadeRoot();
+
+		return $instance->addProcess($process);
+	}
+
+	public static function GetSetting()
+	{
+		/** @var \swoole_server $instance */
+		$instance = self::getFacadeRoot();
+
+		return $instance->setting;
 	}
 }

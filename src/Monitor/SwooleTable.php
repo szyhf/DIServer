@@ -72,10 +72,10 @@ class SwooleTable implements IMonitor
 
 	public function Bind()
 	{
-		Event::Add('TaskReceived', [$this, 'TaskReceived']);
-		Event::Add("TaskFinished", [$this, 'TaskFinished']);
+		Event::Add('OnTaskReceived', [$this, 'OnTaskReceived']);
+		Event::Add("OnTaskFinished", [$this, 'OnTaskFinished']);
 		Event::Add('OnFinish', [$this, 'OnFinish']);
-		Event::Add('TaskSent', [$this, 'TaskSent']);
+		Event::Add('OnTaskSent', [$this, 'OnTaskSent']);
 		Event::Add('OnRequest', [$this, 'OnRequest']);
 	}
 
@@ -126,20 +126,20 @@ class SwooleTable implements IMonitor
 		return $base;
 	}
 
-	public function TaskSent($task, $taskID)
+	public function OnTaskSent($task, $taskID)
 	{
 		//在Worker进程调用Task或者TaskWait的时候计数
 		$this->Incr($this->workerSendCountField($this->server->worker_id));
 	}
 
-	public function TaskReceived(\swoole_server $server, $task_id, $from_id, $param)
+	public function OnTaskReceived(\swoole_server $server, $task_id, $from_id, $param)
 	{
 		$currentTaskWorkerID = $server->worker_id;
 		//在Task进程触发TaskReceived的时候计数
 		$this->Incr($this->taskReceiveCountField($currentTaskWorkerID));
 	}
 
-	public function TaskFinished(\swoole_server $server, $task_id, $from_id, $param)
+	public function OnTaskFinished(\swoole_server $server, $task_id, $from_id, $param)
 	{
 		//记录指定的TaskWorker完成了的任务数
 		$this->Incr($this->taskFinishCountField($server->worker_id));

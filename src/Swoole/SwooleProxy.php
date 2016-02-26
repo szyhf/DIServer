@@ -136,7 +136,7 @@ class SwooleProxy implements ISwooleProxy
 		}
 		catch(\Exception $receiveException)
 		{
-			Log::Error("Catch exception in receive working:{$receiveException->getMessage()}");
+			Log::Error("Catch exception while receiving: {$receiveException->getMessage()}");
 		}
 
 	}
@@ -152,7 +152,7 @@ class SwooleProxy implements ISwooleProxy
 		}
 		catch(\Exception $taskException)
 		{
-			Log::Error("Catch exception in task working:{$taskException->getMessage()}");
+			Log::Error("Catch exception while tasking: {$taskException->getMessage()}");
 		}
 	}
 
@@ -202,14 +202,14 @@ class SwooleProxy implements ISwooleProxy
 		if($server->taskworker)
 		{
 			$this->taskerServer = Container::GetInstance(ITaskWorkerServer::class);
-			Application::AutoRegistry('TaskWorker.php');
+			Application::AutoRegistry('TaskWorker.php', true);
 			Event::Listen('OnTaskWorkerStart', [&$server, &$worker_id]);
 			$this->taskerServer->OnTaskWorkerStart($server, $worker_id);
 		}
 		else
 		{
 			$this->workerServer = Container::GetInstance(IWorkerServer::class);
-			Application::AutoRegistry('Worker.php');
+			Application::AutoRegistry('Worker.php', true);
 			Event::Listen('OnWorkerStart', [&$server, &$worker_id]);
 			$this->workerServer->OnWorkerStart($server, $worker_id);
 		}
@@ -237,13 +237,13 @@ class SwooleProxy implements ISwooleProxy
 		Container::Unregister(\swoole_server::class);
 		Container::RegisterClassByInstance(\swoole_server::class, $server);
 		$this->managerServer = Container::GetInstance(IManagerServer::class);
-		Event::Listen('OnManagerStart', [$server]);
+		Event::Listen('OnManagerStart', [&$server]);
 		$this->managerServer->OnManagerStart($server);
 	}
 
 	public function OnManagerStop(\swoole_server $server)
 	{
-		Event::Listen('OnManagerStop', [$server]);
+		Event::Listen('OnManagerStop', [&$server]);
 		$this->managerServer->OnManagerStop($server);
 	}
 }
