@@ -5,4 +5,8 @@ return [
 	\DIServer\Bootstraps\DetectEnvironment::class,
 	//\DIServer\Bootstraps\AutoBuilder::class,
 	\DIServer\Bootstraps\InitSwooleServer::class,
+	\DIServer\Bootstraps\SwooleSetting::class,
+	\DIServer\Bootstraps\AddProcess::class,
+	\DIServer\Bootstraps\InitMonitor::class,
+	\DIServer\Bootstraps\Start::class
 ];
