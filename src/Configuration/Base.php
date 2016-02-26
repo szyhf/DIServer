@@ -3,10 +3,8 @@
 namespace DIServer\Configuration;
 
 use DIServer\Helpers\Ary;
-use DIServer\Helpers\IO;
 use DIServer\Interfaces\IConfig;
 use DIServer\Services\Application;
-use DIServer\Services\Event;
 use DIServer\Services\Log;
 
 class Base implements IConfig
@@ -48,7 +46,6 @@ class Base implements IConfig
 		$files = Application::GetConventionPaths("/Config/{$pk}{$ext}");
 		foreach($files as $file)
 		{
-			Log::Debug($file);
 			$this->loadFromArray($file, $ext);
 		}
 	}
@@ -273,5 +270,17 @@ class Base implements IConfig
 	public function offsetUnset($offset)
 	{
 		unset($this->cache[$offset]);
+	}
+
+	/**
+	 * 移除一个配置键
+	 *
+	 * @param $key
+	 *
+	 * @return mixed
+	 */
+	public function Delete($key)
+	{
+		unset($this->cache[$key]);
 	}
 }
