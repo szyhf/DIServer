@@ -85,12 +85,7 @@ class Application extends Facade
 		return static::__callStatic(__FUNCTION__, func_get_args());
 	}
 
-	/**
-	 * @param $config
-	 *
-	 * @return mixed
-	 */
-	public static function AutoInclude($config)
+	public static function AutoBuildCollection($registryFile, $iface = '')
 	{
 		return static::__callStatic(__FUNCTION__, func_get_args());
 	}

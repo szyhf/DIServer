@@ -34,7 +34,6 @@
       "DIServer\\": "src/"
     }
   },
-  "suggest":{
-    "ssdb/phpssdb":"A nosql db server can be use as Cache or Session or Log service."
+  "suggest": {
   }
 }

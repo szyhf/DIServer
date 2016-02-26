@@ -5,11 +5,10 @@ namespace DIServer
 
 	use DIServer\Container\Container as Container;
 	use DIServer\Helpers\Ary;
-	use DIServer\Helpers\IO;
 	use DIServer\Interfaces\IApplication;
-	use \DIServer\Interfaces\IBootstrapper;
 	use DIServer\Services\Bootstrapper;
 	use DIServer\Services\Event;
+	use DIServer\Services\Log;
 
 	/**
 	 * 主程序
@@ -50,6 +49,7 @@ namespace DIServer
 		 * Application的构造函数
 		 *
 		 * @param string $basePath 应用目录
+		 * @param array  $args     传入参数
 		 */
 		public function __construct($basePath, $args = [])
 		{
@@ -119,7 +119,7 @@ namespace DIServer
 					}
 					if($build)
 					{
-						$instances[] = $this->GetInstance($serv);
+						$instances[$iface] = $this->GetInstance($serv);
 					}
 				}
 				else
@@ -129,6 +129,87 @@ namespace DIServer
 			}
 
 			return $instances;
+		}
+
+		public function AutoBuildCollection($registryFile, $iface = '')
+		{
+			$files = $this->GetConventionPaths("/Registry/$registryFile");
+
+			if($this->isAbstract($iface))
+			{
+				$check = function (string $class) use ($iface)
+				{
+					if(class_exists($class))
+					{
+						$refClass = new \ReflectionClass($class);
+
+						if($refClass->isSubclassOf($iface))
+						{
+							return true;
+						}
+						else
+						{
+							Log::Warning("Try to auto-build $class, but class isn't instance of $iface.");
+						}
+					}
+					else
+					{
+						Log::Warning("Try to auto-build $class, but class not exist.");
+					}
+
+					return false;
+				};
+			}
+			else
+			{
+				$check = function (string $class)
+				{
+					if(class_exists($class))
+					{
+						return true;
+					}
+					else
+					{
+						Log::Warning("Try to auto-build $class, but class not exist.");
+					}//没有传入iface就不检查默认true
+					return false;
+				};
+			}
+
+			$newClasses = [];
+			foreach($files as $file)
+			{
+				if(file_exists($file))
+				{
+					$tempClass = include $file;
+					Ary::MergeRecursive($newClasses, $tempClass);
+				}
+			}
+
+			$newInstances = [];
+			foreach($newClasses as $key => $newClass)
+			{
+				if(is_array($newClass))
+				{
+					foreach($newClass as $tempClass)
+					{
+						if($check($newClass))
+						{
+							$newInstances[$key][] = $this->BuildWithClass($newClass);
+						}
+					}
+				}
+				else
+				{
+					if($check($newClass))
+					{
+						$newInstances[$key] = $this->BuildWithClass($newClass);
+					}
+				}
+
+			}
+
+			return $newInstances;
 		}
 
 		/**
@@ -183,6 +264,7 @@ namespace DIServer
 			$this->bindCoreAliases();
 			Event::Add('OnMasterStart', [$this, 'RecordPID']);
 			Bootstrapper::Boot();
+
 		}
 
 		/**
@@ -205,8 +287,8 @@ namespace DIServer
 		public function SetBasePath($basePath)
 		{
 			$this->basePath = realpath(rtrim($basePath, '\/'));
-			$this->serverPath = $this->GetBasePath('/app/' . $this->GetServerName());
-			$this->commonPath = $this->GetBasePath('/app/Common');
+			$this->serverPath = $this->GetBasePath('/App/' . $this->GetServerName());
+			$this->commonPath = $this->GetBasePath('/App/Common');
 
 			return $this;
 		}
@@ -382,8 +464,8 @@ namespace DIServer
 			else
 			{
 				$pid = $this->readPID();
-				posix_kill($pid, SIGTERM);
 				echo "Try kill -15(SIGTERM) to process $pid." . PHP_EOL;
+				posix_kill($pid, SIGTERM);
 			}
 		}
 
@@ -405,6 +487,7 @@ namespace DIServer
 						echo "Try kill -9(SIGKILL) to process $pid." . PHP_EOL;
 						posix_kill($pid, SIGKILL);
 					}
+
 					return $pid;
 				}
 			}
