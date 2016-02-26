@@ -72,7 +72,7 @@ class Base
 	 *
 	 * @param \Closure $destination
 	 *
-	 * @return mixed
+	 * @return \Closure
 	 */
 	public function Prepared(\Closure $destination)
 	{
