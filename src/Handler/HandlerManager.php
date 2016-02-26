@@ -3,13 +3,19 @@
 namespace DIServer\Handler;
 
 
+use DIServer\Helpers\Ary;
 use DIServer\Interfaces\IHandler;
 use DIServer\Interfaces\IHandlerManager;
+use DIServer\Interfaces\IMiddleware;
 use DIServer\Services\Application;
+use DIServer\Services\Container;
+use DIServer\Pipeline\Base as Pipeline;
+use DIServer\Services\Log;
 
 class HandlerManager implements IHandlerManager
 {
 	protected $handlers = [];
+
 	public function GetHandlerByID($handlerID)
 	{
 		return $this->handlers[$handlerID];
@@ -17,76 +23,46 @@ class HandlerManager implements IHandlerManager
 
 	public function __construct()
 	{
-		$this->_reloadCommonHandler();
-		$this->_reloadServerHandler();
-	}
-
-	/**
-	 * 重载Common/Handler
-	 */
-	private function _reloadCommonHandler()
-	{
-		$path = Application::GetCommonPath() . '/Registry/Handler.php';
-		if(file_exists($path))
+		$handlers = Application::AutoBuildCollection('Handler.php');
+		foreach($handlers as $key => $handler)
 		{
-			$handlerClasses = include $path;
-			//Log::Debug($handlerClasses);
-			$this->_loadHandler($handlerClasses);
+			if(is_array($handler))
+			{
+				$this->handlers[$key] = $this->_createPipeClosure($handler);
+			}
+			else
+			{
+				$this->handlers[$key] = [$this->_createPipeClosure($handler)];
+			}
 		}
 	}
 
 	/**
-	 * 重载Server/Handler
+	 * @param \DIServer\Interfaces\IHandler $handler
+	 *
+	 * @return \Closure
 	 */
-	private function _reloadServerHandler()
+	private function _createPipeClosure(\DIServer\Interfaces\IHandler $handler)
 	{
-		$path = Application::GetServerPath() . '/Registry/Handler.php';
-		if(file_exists($path))
+		$pipeline = new Pipeline();
+		$middlewareClasses = $handler->GetMiddlewares();
+		$middlewareHandlers = [];
+		foreach($middlewareClasses as $middlewareClass)
 		{
-			$handlerClasses = include $path;
-			//Log::Debug($handlerClasses);
-			$this->_loadHandler($handlerClasses);
+			$refClass = new \ReflectionClass($middlewareClass);
+			if(!$refClass->isSubclassOf(IMiddleware::class))
+			{
+				Log::Warning("Try to load $middlewareClass in " . get_class($handler) . " but is not instance of IMiddleware");
+				continue;
+			}
+			$middlewareHandlers[] = Container::BuildWithClass($middlewareClass);
 		}
-	}
 
-	private function _loadHandler(array $handlerClasses)
-	{
-		foreach($handlerClasses as $handlerID => $handlerClassAry)
-		{
-			if(is_array($handlerClassAry))
-			{
-				foreach($handlerClassAry as $handlerClass)
-				{
-					$this->_tryRegitryHandler($handlerID, $handlerClass);
-				}
-			}
-			else
-			{
-				$this->_tryRegitryHandler($handlerID, $handlerClassAry);
-			}
-		}
-	}
-
-	private function _tryRegitryHandler($handlerID, $handlerClassName)
-	{
-		if(class_exists($handlerClassName))
-		{
-			$handlerRefClass = new \ReflectionClass($handlerClassName);
-			if($handlerRefClass->isSubclassOf(IHandler::class))
-			{
-				Application::RegisterClass($handlerClassName);
-				Application::RegisterInterfaceByClass(IHandler::class, $handlerRefClass->getName(), $handlerRefClass->getName());
-				$handlerObj = Application::GetInstance(IHandler::class, $handlerRefClass->getName());
-				$this->handlers[$handlerID][] = $handlerObj;
-			}
-			else
-			{
-				Log::Warning("Load $handlerClassName is not instance of IHandler.");
-			}
-		}
-		else
-		{
-			Log::Warning("Try to load $handlerClassName but not exist.");
-		}
+		return $pipeline->Through($middlewareHandlers)
+		                ->Prepared(function ($request) use ($handler)
+		                {
+			                //最后一层封装为Handler的默认Handle方法
+			                return Container::CallMethod($handler, 'Handle', ['request' => $request]);
+		                });
 	}
 }

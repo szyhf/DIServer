@@ -8,7 +8,7 @@ use DIServer\Interfaces\IHandler;
 use DIServer\Services\HandlerManager;
 use DIServer\Services\Service;
 
-class WorkerDispatcher extends Service implements IDispatcher
+class WorkerDispatcher implements IDispatcher
 {
 	protected $filters = [];
 
@@ -33,9 +33,10 @@ class WorkerDispatcher extends Service implements IDispatcher
 				/** @var IHandler $handler */
 				foreach($handlers as $handler)
 				{
-					$handler->BeforeHandle($request);
-					$handler->DispatchRequest($request);
-					$handler->AfterHandle($request);
+					call_user_func($handler, $request);
+					//$handler->BeforeHandle($request);
+					//$handler->DispatchRequest($request);
+					//$handler->AfterHandle($request);
 				}
 			}
 		}
