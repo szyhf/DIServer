@@ -5,7 +5,7 @@ namespace DIServer\Ticker;
 
 use DIServer\Services\Log;
 
-class Base
+class CrontabTicker
 {
 	private $_now = 0;//用户提供的起点
 	private $_start = 0;//统计起点
@@ -19,7 +19,6 @@ class Base
 	private $_limits = [];
 	private $_crontab = '';
 	private $_availableTimes = [];
-	private $_log = [];
 	const YEAR = 'Y';
 	const MONTH = 'n';
 	const WEEK = 'w';
@@ -153,6 +152,16 @@ class Base
 		$this->_initStart();//初始化统计起点
 		$this->_initPeriods();//初始化可用周期
 		return $this->_nextAvailableTime();
+	}
+
+	/**
+	 * 定时器触发时执行的回调
+	 *
+	 * @param \Closure $callback
+	 */
+	public function Then(\Closure $callback)
+	{
+
 	}
 
 	/**
@@ -330,26 +339,20 @@ class Base
 	 *
 	 * @return bool|mixed
 	 */
-	private function _nextMatch($availableDates, $num, &$nextPeriodOutput = false)
+	private function _nextMatch(array $availableDates, $num, &$nextPeriodOutput = false)
 	{
-		if(empty($availableDates))
-		{
-			return false;
-		}
 		$next = false;
 		foreach($availableDates as $index => $availableDate)
 		{
 			if($availableDate >= $num)
 			{
-				//Log::Debug("$availableDate >= $num");
 				$next = $availableDate;
 				break;
 			}
 		}
-		$nextPeriodOutput = !$next;
+		$nextPeriodOutput = $next === false;//0是合法的
 		if($nextPeriodOutput)
 		{
-			//Log::Debug('next = false');
 			$next = min($availableDates);
 		}
 
@@ -436,6 +439,7 @@ class Base
 		{
 			$nextSecond =
 				$this->_nextMatch($this->_availableTimes[self::SECOND], $this->_periods[self::SECOND], $nextRound);
+
 			if($nextRound)
 			{
 				//当前分钟内已无足够秒，进入下个可用分钟（可能导致小时不足进入下个小时，延后处理）
@@ -542,7 +546,7 @@ class Base
 	 */
 	private function _nextAvailableTime()
 	{
-		$nextAvailableDay = $this->_nextAvailableDay();
+		$this->_nextAvailableDay();
 		if($this->_isSameDay())
 		{
 			//按照秒、分、时的方式进行计算（以处理进位）
@@ -575,7 +579,7 @@ class Base
 	 */
 	private function _getWeeTime($time)
 	{
-		return strtotime(date('Y-m-d', $time));
+		return strtotime(date('Ymd', $time));
 	}
 
 	/**
