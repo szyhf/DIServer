@@ -19,6 +19,7 @@ class CrontabTicker
 	private $_limits = [];
 	private $_crontab = '';
 	private $_availableTimes = [];
+	private $_log = [];
 	const YEAR = 'Y';
 	const MONTH = 'n';
 	const WEEK = 'w';
@@ -149,6 +150,7 @@ class CrontabTicker
 	{
 		$this->_parse();//分析命令
 		$this->_initLimits();//初始化限制条件
+		//Log::Debug($this->_availableTimes);
 		$this->_initStart();//初始化统计起点
 		$this->_initPeriods();//初始化可用周期
 		return $this->_nextAvailableTime();
@@ -516,7 +518,14 @@ class CrontabTicker
 		}
 		elseif(!$dayLimit && $weekLimit)
 		{
-			return $this->_nextWeekTime();
+			$weekTime = $this->_nextWeekTime();
+			//根据weekTime重置nextPeriods
+			$this->_nextPeriods[self::YEAR] = date(self::YEAR, $weekTime);
+			$this->_nextPeriods[self::MONTH] = date(self::MONTH, $weekTime);
+			$this->_nextPeriods[self::DAY] = date(self::DAY, $weekTime);
+			$this->_log[] = '!$dayLimit && $weekLimit: ' . self::FormatTime($weekTime);
+
+			return $weekTime;
 		}
 		else
 		{
@@ -675,4 +684,8 @@ class CrontabTicker
 		return date('Y-m-d H:i:s w', $time);
 	}
 
+	public function DumpLog()
+	{
+		Log::Debug($this->_log);
+	}
 }
