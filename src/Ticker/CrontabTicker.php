@@ -313,6 +313,7 @@ class CrontabTicker
 	 */
 	private function _initPeriods()
 	{
+		$this->_nextPeriods = [];//清理上一次遗留的数据
 		$this->_periods[self::YEAR] = date(self::YEAR, $this->_start);
 		$this->_periods[self::MONTH] = date(self::MONTH, $this->_start);
 		$this->_periods[self::DAY] = date(self::DAY, $this->_start);
@@ -392,7 +393,8 @@ class CrontabTicker
 	private function _countNextMonth()
 	{
 		$nextMonth = $this->_periods[self::MONTH];
-		if($this->_isLimited(self::MONTH))
+
+		if($this->_isLimited(self::MONTH) || $this->_nextPeriods[self::MONTH])
 		{
 			$nextMonth = $this->_nextMatch($this->_availableTimes[self::MONTH],
 			                               $this->_periods[self::MONTH] + $this->_nextPeriods[self::MONTH],
@@ -430,7 +432,7 @@ class CrontabTicker
 	private function _countNextHour()
 	{
 		$nextHour = 0;
-		if($this->_isLimited(self::HOUR))
+		if($this->_isLimited(self::HOUR) || $this->_nextPeriods[self::HOUR])
 		{
 			$nextHour = $this->_nextMatch($this->_availableTimes[self::HOUR],
 			                              $this->_periods[self::HOUR] + $this->_nextPeriods[self::HOUR],
@@ -443,6 +445,13 @@ class CrontabTicker
 				Log::Debug($this->_nextPeriods[self::HOUR]);
 				throw new \Exception("Algorithm error, next hour has overflow.");
 			}
+
+			if($nextHour != $this->_periods[self::HOUR])
+			{
+				//Log::Debug('$nextHour != $this->_periods[self::HOUR]');
+				$this->_nextPeriods[self::MINUTE] = min($this->_availableTimes[self::MINUTE]);
+				$this->_nextPeriods[self::SECOND] = min($this->_availableTimes[self::SECOND]);
+			}
 		}
 		$this->_nextPeriods[self::HOUR] = $nextHour;
 	}
@@ -450,20 +459,17 @@ class CrontabTicker
 	private function _countNextMinute()
 	{
 		$nextMinute = 0;
-		if($this->_isLimited(self::MINUTE))
+		if($this->_isLimited(self::MINUTE) || $this->_nextPeriods[self::MINUTE])
 		{
 			$nextMinute = $this->_nextMatch($this->_availableTimes[self::MINUTE],
 			                                $this->_periods[self::MINUTE] + $this->_nextPeriods[self::MINUTE],
 			                                $nextRound);
-			if($nextRound)
+
+			$this->_nextPeriods[self::HOUR] = $nextRound ? 1 : 0;
+			if($nextMinute != $this->_periods[self::MINUTE])
 			{
-				//Log::Debug("Current hour[{$this->_periods[self::HOUR]}] has not enough minute.");
-				//当前小时内已无足够的分钟，进入下个可用小时
-				$this->_nextPeriods[self::HOUR] = 1;//Hour的溢出问题放在_countNextHour中检查
-			}
-			else
-			{
-				$this->_nextPeriods[self::HOUR] = 0;
+				//Log::Debug('$nextMinute != $this->_periods[self::MINUTE]');
+				$this->_nextPeriods[self::SECOND] = min($this->_availableTimes[self::SECOND]);
 			}
 		}
 		$this->_nextPeriods[self::MINUTE] = $nextMinute;
@@ -562,7 +568,6 @@ class CrontabTicker
 			$this->_nextPeriods[self::YEAR] = date(self::YEAR, $weekTime);
 			$this->_nextPeriods[self::MONTH] = date(self::MONTH, $weekTime);
 			$this->_nextPeriods[self::DAY] = date(self::DAY, $weekTime);
-			$this->_log[] = '!$dayLimit && $weekLimit: ' . self::FormatTime($weekTime);
 
 			return $weekTime;
 		}
@@ -570,6 +575,7 @@ class CrontabTicker
 		{
 			$dayTime = $this->_nextDayTime();
 			$weekTime = $this->_nextWeekTime();
+
 			if($weekTime < $dayTime)
 			{
 				//根据weekTime重置nextPeriods
