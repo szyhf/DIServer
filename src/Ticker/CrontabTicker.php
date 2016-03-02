@@ -163,17 +163,12 @@ class CrontabTicker
 		}
 	}
 
-	public function NextTime()
-	{
-
-	}
-
 	/**
 	 * 定时器触发时执行的回调
 	 *
-	 * @param \Closure $callback
+	 * @param callable $callback
 	 */
-	public function Then(\Closure $callback)
+	public function Then(callable $callback, $params = null)
 	{
 
 	}
@@ -218,8 +213,26 @@ class CrontabTicker
 			$v3 = explode("/", $v2);
 			$step = empty($v3[1]) ? 1 : $v3[1];
 			$v4 = explode("-", $v3[0]);
-			$_min = count($v4) == 2 ? $v4[0] : ($v3[0] == "*" ? $min : $v3[0]);
-			$_max = count($v4) == 2 ? $v4[1] : ($v3[0] == "*" ? $max : $v3[0]);
+			if(count($v4) == 2)//涉及分阶段的计算
+			{
+				if($v4[0] <= $v4[1])
+				{
+					$_min = $v4[0];
+					$_max = $v4[1];
+				}
+				else//形如22-7实际表示22-23,0-7
+				{
+					//即$v4[0]-$max/$step,$min-$v4[1]/$step，重新拼接字符串计算
+					$s = "{$v4[0]}-$max/$step,$min-{$v4[1]}/$step";
+
+					return $this->_parseCrontabNumber($s, $min, $max);
+				}
+			}
+			else
+			{
+				$_min = ($v3[0] == "*" ? $min : $v3[0]);
+				$_max = ($v3[0] == "*" ? $max : $v3[0]);
+			}
 			for($i = $_min; $i <= $_max; $i += $step)
 			{
 				$result[$i] = intval($i);
@@ -372,20 +385,12 @@ class CrontabTicker
 		{
 			if($availableDate >= $num)
 			{
-				//Log::Debug("$availableDate >= $num");
 				$next = $availableDate;
 				break;
 			}
 		}
 		$nextPeriodOutput = $next === false;//0是合法的
-		if($nextPeriodOutput)
-		{
-			//Log::Debug('$next === false');
-			//Log::Debug($availableDates);
-			//Log::Debug($num);
-			//Log::Debug("===");
-			$next = min($availableDates);
-		}
+		$next = $nextPeriodOutput ? min($availableDates) : $next;
 
 		return $next;
 	}
@@ -399,11 +404,8 @@ class CrontabTicker
 			$nextMonth = $this->_nextMatch($this->_availableTimes[self::MONTH],
 			                               $this->_periods[self::MONTH] + $this->_nextPeriods[self::MONTH],
 			                               $nextPeriod);
-			if($nextPeriod)
-			{
-				//月溢出则增加一年
-				$this->_nextPeriods[self::YEAR]++;
-			}
+			//月溢出则增加一年
+			$this->_nextPeriods[self::YEAR] += $nextPeriod ? 1 : 0;
 		}
 		$this->_nextPeriods[self::MONTH] = $nextMonth;
 	}
@@ -416,15 +418,8 @@ class CrontabTicker
 			$nextDay = $this->_nextMatch($this->_availableTimes[self::DAY],
 			                             $this->_periods[self::DAY],
 			                             $nextPeriod);
-			if($nextPeriod)
-			{
-				//当前月已无足够的日
-				$this->_nextPeriods[self::MONTH] = 1;//可能的月溢出放在_countNextMonth中处理
-			}
-			else
-			{
-				$this->_nextPeriods[self::MONTH] = 0;
-			}
+			//当前月已无足够的日，可能的月溢出放在_countNextMonth中处理
+			$this->_nextPeriods[self::MONTH] = $nextPeriod ? 1 : 0;
 		}
 		$this->_nextPeriods[self::DAY] = $nextDay;
 	}
@@ -441,14 +436,12 @@ class CrontabTicker
 			{
 				//算法异常，因为已经验证过当天时间的充分性
 				//如果还出现下个周期说明算法有问题。
-				Log::Debug($this->_periods[self::HOUR]);
-				Log::Debug($this->_nextPeriods[self::HOUR]);
 				throw new \Exception("Algorithm error, next hour has overflow.");
 			}
 
 			if($nextHour != $this->_periods[self::HOUR])
 			{
-				//Log::Debug('$nextHour != $this->_periods[self::HOUR]');
+				//进入到新的Hour，则Minute和Second处理为可选的最小值。
 				$this->_nextPeriods[self::MINUTE] = min($this->_availableTimes[self::MINUTE]);
 				$this->_nextPeriods[self::SECOND] = min($this->_availableTimes[self::SECOND]);
 			}
@@ -468,7 +461,7 @@ class CrontabTicker
 			$this->_nextPeriods[self::HOUR] = $nextRound ? 1 : 0;
 			if($nextMinute != $this->_periods[self::MINUTE])
 			{
-				//Log::Debug('$nextMinute != $this->_periods[self::MINUTE]');
+				//进入新的Minute，则Second处理为可选的最小值。
 				$this->_nextPeriods[self::SECOND] = min($this->_availableTimes[self::SECOND]);
 			}
 		}
@@ -482,16 +475,8 @@ class CrontabTicker
 		{
 			$nextSecond =
 				$this->_nextMatch($this->_availableTimes[self::SECOND], $this->_periods[self::SECOND], $nextRound);
-
-			if($nextRound)
-			{
-				//当前分钟内已无足够秒，进入下个可用分钟（可能导致小时不足进入下个小时，延后处理）
-				$this->_nextPeriods[self::MINUTE] = 1;
-			}
-			else
-			{
-				$this->_nextPeriods[self::MINUTE] = 0;
-			}
+			//当前分钟内已无足够秒，进入下个可用分钟（可能导致小时不足进入下个小时，延后处理）
+			$this->_nextPeriods[self::MINUTE] = $nextRound ? 1 : 0;
 		}
 		$this->_nextPeriods[self::SECOND] = $nextSecond;
 	}
@@ -547,8 +532,8 @@ class CrontabTicker
 	 */
 	private function _nextAvailableDay()
 	{
-		/** @var bool $dayLimit 日月约束 */
-		$dayLimit = $this->_isLimited(self::MONTH) || $this->_isLimited(self::DAY);
+		/** @var bool $dayMonthLimit 日月约束 */
+		$dayMonthLimit = $this->_isLimited(self::MONTH) || $this->_isLimited(self::DAY);
 		/** @var bool $weekLimit 周约束 */
 		$weekLimit = $this->_isLimited(self::WEEK);
 
@@ -561,7 +546,7 @@ class CrontabTicker
 		{
 			return $this->_nextDayTime();
 		}
-		elseif(!$dayLimit && $weekLimit)
+		elseif(!$dayMonthLimit && $weekLimit)
 		{
 			$weekTime = $this->_nextWeekTime();
 			//根据weekTime重置nextPeriods
@@ -573,6 +558,7 @@ class CrontabTicker
 		}
 		else
 		{
+			//既有
 			$dayTime = $this->_nextDayTime();
 			$weekTime = $this->_nextWeekTime();
 
