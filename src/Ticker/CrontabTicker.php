@@ -148,12 +148,24 @@ class CrontabTicker
 	 */
 	public function Next()
 	{
-		$this->_parse();//分析命令
 		$this->_initLimits();//初始化限制条件
 		//Log::Debug($this->_availableTimes);
-		$this->_initStart();//初始化统计起点
-		$this->_initPeriods();//初始化可用周期
-		return $this->_nextAvailableTime();
+		//$this->_initStart();//初始化统计起点
+		//$this->_initPeriods();//初始化可用周期
+		//yield $this->_nextAvailableTime();
+		while($this->_now < PHP_INT_MAX)
+		{
+			$this->_initStart();//初始化统计起点
+			$this->_initPeriods();//初始化可用周期
+			$this->_now = $this->_nextAvailableTime();
+			yield $this->_now++;
+			//Log::Debug("yield:{0}", [self::FormatTime($this->_now)]);
+		}
+	}
+
+	public function NextTime()
+	{
+
 	}
 
 	/**
@@ -173,7 +185,6 @@ class CrontabTicker
 	 */
 	public function Till()
 	{
-		$this->_parse();//分析命令
 		$this->_initLimits();//初始化限制条件
 		$this->_initStart();//初始化统计起点
 		$this->_initPeriods();//初始化可用周期
@@ -188,42 +199,7 @@ class CrontabTicker
 		$this->_limits = [];
 		$this->_parse = '';
 		$this->_availableTimes = [];
-	}
-
-	/**
-	 * 格式化crontab命令并初始化$_availableTimes
-	 *
-	 * @param string $crontab crontab格式字符串
-	 *
-	 * @return array
-	 * @throws \Exception
-	 */
-	private function _parse()
-	{
-		$cron = preg_split("/[\s]+/i", trim($this->_crontab));
-
-		if(count($cron) == 6)
-		{
-			$this->_availableTimes = [
-				self::SECOND => self::_parseCrontabNumber($cron[0], 0, 59),
-				self::MINUTE => self::_parseCrontabNumber($cron[1], 0, 59),
-				self::HOUR   => self::_parseCrontabNumber($cron[2], 0, 23),
-				self::DAY    => self::_parseCrontabNumber($cron[3], 1, 31),
-				self::MONTH  => self::_parseCrontabNumber($cron[4], 1, 12),
-				self::WEEK   => self::_parseCrontabNumber($cron[5], 0, 6),
-			];
-		}
-		elseif(count($cron) == 5)
-		{
-			$this->_availableTimes = [
-				self::SECOND => [0 => 0],
-				self::MINUTE => self::_parseCrontabNumber($cron[0], 0, 59),
-				self::HOUR   => self::_parseCrontabNumber($cron[1], 0, 23),
-				self::DAY    => self::_parseCrontabNumber($cron[2], 1, 31),
-				self::MONTH  => self::_parseCrontabNumber($cron[3], 1, 12),
-				self::WEEK   => self::_parseCrontabNumber($cron[4], 0, 6),
-			];
-		}
+		$this->_log = [];
 	}
 
 	/**
@@ -259,29 +235,76 @@ class CrontabTicker
 	 */
 	private function _initLimits()
 	{
-		if(count($this->_availableTimes[self::MONTH]) < 12)
+		$cron = preg_split("/[\s]+/i", trim($this->_crontab));
+		if(count($cron) == 5)
 		{
-			$this->_limits[] = self::MONTH;
+			//5个参数的时候自动补秒约束0
+			array_unshift($cron, '0');
 		}
-		if(count($this->_availableTimes[self::WEEK]) < 7)
+
+		$this->_availableTimes[self::MONTH] = self::_parseCrontabNumber($cron[4], 1, 12);
+		if($cron[4] != '*')//Month
 		{
-			$this->_limits[] = self::WEEK;
+			$this->_limits[self::MONTH] = true;
+			$this->_limits[self::DAY] = true;
+			$this->_limits[self::HOUR] = true;
+			$this->_limits[self::MINUTE] = true;
+			$this->_limits[self::SECOND] = true;
 		}
-		if(count($this->_availableTimes[self::DAY]) < 31)
+
+		$this->_availableTimes[self::WEEK] = self::_parseCrontabNumber($cron[5], 0, 6);
+		if($cron[5] != '*')//Week
 		{
-			$this->_limits[] = self::DAY;
+			$this->_limits[self::WEEK] = true;
+			$this->_limits[self::HOUR] = true;
+			$this->_limits[self::MINUTE] = true;
+			$this->_limits[self::SECOND] = true;
 		}
-		if(count($this->_availableTimes[self::HOUR]) < 24)
+
+		$this->_availableTimes[self::DAY] = self::_parseCrontabNumber($cron[3], 1, 31);
+		if($cron[3] != '*')//Day
 		{
-			$this->_limits[] = self::HOUR;
+			$this->_limits[self::DAY] = true;
+			$this->_limits[self::HOUR] = true;
+			$this->_limits[self::MINUTE] = true;
+			$this->_limits[self::SECOND] = true;
 		}
-		if(count($this->_availableTimes[self::MINUTE]) < 60)
+		//elseif($this->_isLimited(self::DAY))
+		//{
+		//	$this->_availableTimes[self::DAY] = [1 => 1];
+		//}
+
+		if($cron[2] != '*')//Hour
 		{
-			$this->_limits[] = self::MINUTE;
+			$this->_availableTimes[self::HOUR] = self::_parseCrontabNumber($cron[2], 0, 23);
+			$this->_limits[self::HOUR] = true;
+			$this->_limits[self::MINUTE] = true;
+			$this->_limits[self::SECOND] = true;
 		}
-		if(count($this->_availableTimes[self::SECOND]) < 60)
+		elseif($this->_isLimited(self::HOUR))
 		{
-			$this->_limits[] = self::SECOND;
+			$this->_availableTimes[self::HOUR] = [0 => 0];
+		}
+
+		if($cron[1] != '*')//Minute
+		{
+			$this->_availableTimes[self::MINUTE] = self::_parseCrontabNumber($cron[1], 0, 59);
+			$this->_limits[self::MINUTE] = true;
+			$this->_limits[self::SECOND] = true;
+		}
+		elseif($this->_isLimited(self::MINUTE))
+		{
+			$this->_availableTimes[self::MINUTE] = [0 => 0];
+		}
+
+		if($cron[0] != '*')//Second
+		{
+			$this->_availableTimes[self::SECOND] = self::_parseCrontabNumber($cron[0], 0, 59);
+			$this->_limits[self::SECOND] = true;
+		}
+		elseif($this->_isLimited(self::SECOND))
+		{
+			$this->_availableTimes[self::SECOND] = [0 => 0];
 		}
 	}
 
@@ -297,8 +320,8 @@ class CrontabTicker
 		$this->_periods[self::MINUTE] = date(self::MINUTE, $this->_start);
 		$this->_periods[self::SECOND] = date(self::SECOND, $this->_start);
 		$this->_periods[self::WEEK] = date(self::WEEK, $this->_start);
-
-		$this->_nextPeriods = $this->_periods;
+		$this->_nextPeriods[self::YEAR] = $this->_periods[self::YEAR];
+		//$this->_nextPeriods = $this->_periods;
 	}
 
 	private function _initStart()
@@ -344,10 +367,11 @@ class CrontabTicker
 	private function _nextMatch(array $availableDates, $num, &$nextPeriodOutput = false)
 	{
 		$next = false;
-		foreach($availableDates as $index => $availableDate)
+		foreach($availableDates as $availableDate)
 		{
 			if($availableDate >= $num)
 			{
+				//Log::Debug("$availableDate >= $num");
 				$next = $availableDate;
 				break;
 			}
@@ -355,6 +379,10 @@ class CrontabTicker
 		$nextPeriodOutput = $next === false;//0是合法的
 		if($nextPeriodOutput)
 		{
+			//Log::Debug('$next === false');
+			//Log::Debug($availableDates);
+			//Log::Debug($num);
+			//Log::Debug("===");
 			$next = min($availableDates);
 		}
 
@@ -363,6 +391,7 @@ class CrontabTicker
 
 	private function _countNextMonth()
 	{
+		$nextMonth = $this->_periods[self::MONTH];
 		if($this->_isLimited(self::MONTH))
 		{
 			$nextMonth = $this->_nextMatch($this->_availableTimes[self::MONTH],
@@ -373,30 +402,29 @@ class CrontabTicker
 				//月溢出则增加一年
 				$this->_nextPeriods[self::YEAR]++;
 			}
-			$this->_nextPeriods[self::MONTH] = $nextMonth;
 		}
+		$this->_nextPeriods[self::MONTH] = $nextMonth;
 	}
 
 	private function _countNextDay()
 	{
+		$nextDay = $this->_periods[self::DAY];
 		if($this->_isLimited(self::DAY))
 		{
 			$nextDay = $this->_nextMatch($this->_availableTimes[self::DAY],
-			                             $this->_nextPeriods[self::DAY],
+			                             $this->_periods[self::DAY],
 			                             $nextPeriod);
 			if($nextPeriod)
 			{
-				//日溢出
-				$this->_nextPeriods[self::MONTH]++;
-				//可能导致月溢出并可能导致年溢出
-				if($this->_nextPeriods[self::MONTH] > 12)
-				{
-					$this->_nextPeriods[self::MONTH] = 1;
-					$this->_nextPeriods[self::YEAR]++;
-				}
+				//当前月已无足够的日
+				$this->_nextPeriods[self::MONTH] = 1;//可能的月溢出放在_countNextMonth中处理
 			}
-			$this->_nextPeriods[self::DAY] = $nextDay;
+			else
+			{
+				$this->_nextPeriods[self::MONTH] = 0;
+			}
 		}
+		$this->_nextPeriods[self::DAY] = $nextDay;
 	}
 
 	private function _countNextHour()
@@ -411,6 +439,8 @@ class CrontabTicker
 			{
 				//算法异常，因为已经验证过当天时间的充分性
 				//如果还出现下个周期说明算法有问题。
+				Log::Debug($this->_periods[self::HOUR]);
+				Log::Debug($this->_nextPeriods[self::HOUR]);
 				throw new \Exception("Algorithm error, next hour has overflow.");
 			}
 		}
@@ -427,8 +457,13 @@ class CrontabTicker
 			                                $nextRound);
 			if($nextRound)
 			{
+				//Log::Debug("Current hour[{$this->_periods[self::HOUR]}] has not enough minute.");
 				//当前小时内已无足够的分钟，进入下个可用小时
 				$this->_nextPeriods[self::HOUR] = 1;//Hour的溢出问题放在_countNextHour中检查
+			}
+			else
+			{
+				$this->_nextPeriods[self::HOUR] = 0;
 			}
 		}
 		$this->_nextPeriods[self::MINUTE] = $nextMinute;
@@ -446,6 +481,10 @@ class CrontabTicker
 			{
 				//当前分钟内已无足够秒，进入下个可用分钟（可能导致小时不足进入下个小时，延后处理）
 				$this->_nextPeriods[self::MINUTE] = 1;
+			}
+			else
+			{
+				$this->_nextPeriods[self::MINUTE] = 0;
 			}
 		}
 		$this->_nextPeriods[self::SECOND] = $nextSecond;
@@ -465,7 +504,7 @@ class CrontabTicker
 		if($this->_isLimited(self::WEEK))
 		{
 			$nextWeek = $this->_nextMatch($this->_availableTimes[self::WEEK],
-			                              $this->_nextPeriods[self::WEEK]);
+			                              $this->_periods[self::WEEK]);
 			//不在当天激活，则将时间调整为下个激活日的凌晨
 			if($nextWeek != $this->_periods[self::WEEK])
 			{
@@ -657,7 +696,7 @@ class CrontabTicker
 	 */
 	private function _isLimited($span)
 	{
-		return in_array($span, $this->_limits);
+		return isset($this->_limits[$span]);
 	}
 
 	/**
@@ -667,9 +706,9 @@ class CrontabTicker
 	 */
 	private function _isSameDay()
 	{
-		return $this->_periods[self::YEAR] === $this->_nextPeriods[self::YEAR] &&
-		       $this->_periods[self::DAY] === $this->_nextPeriods[self::DAY] &&
-		       $this->_periods[self::MONTH] === $this->_nextPeriods[self::MONTH];
+		return $this->_periods[self::YEAR] == $this->_nextPeriods[self::YEAR] &&
+		       $this->_periods[self::DAY] == $this->_nextPeriods[self::DAY] &&
+		       $this->_periods[self::MONTH] == $this->_nextPeriods[self::MONTH];
 	}
 
 	/**
