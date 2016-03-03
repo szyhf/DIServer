@@ -20,6 +20,10 @@ class CrontabTicker
 	private $_crontab = '';
 	private $_availableTimes = [];
 	private $_log = [];
+	/** @var \Iterator 迭代器 */
+	private $_nextIterator = null;
+	/** @var int 下次回调时间 */
+	private $_nextTime = 0;
 	const YEAR = 'Y';
 	const MONTH = 'n';
 	const WEEK = 'w';
@@ -144,7 +148,7 @@ class CrontabTicker
 	/**
 	 * 下个触发时间的时间戳
 	 *
-	 * @return int
+	 * @return \Iterator
 	 */
 	public function Next()
 	{
@@ -166,11 +170,58 @@ class CrontabTicker
 	/**
 	 * 定时器触发时执行的回调
 	 *
-	 * @param callable $callback
+	 * @param callable $callback function($tickID,$params=null){}
+	 * @param mixed    $params   希望传入回调函数的参数
+	 *
+	 * @return $this
 	 */
 	public function Then(callable $callback, $params = null)
 	{
+		$this->_nextIterator = self::Next();
+		$this->_nextTime = $this->_nextIterator->current();
+		Log::Debug($this->FormatTime($this->_nextTime));
+		$tickFunc = function ($called = false) use (&$tickFunc, &$callback, &$params)
+		{
+			$maxCallbackLimits = 30;
+			if($called)
+			{
+				Log::Debug("Tick callback called.");
+				//如果called为true，说明是差距回调，先执行用户方法
+				if(call_user_func($callback, $params) === false)
+				{
+					Log::Debug('Return false.');
 
+					//如果用户回调函数返回false，则停止当然日程继续回调
+					return;
+				}
+			}
+
+			while($this->_nextTime <= time())
+			{
+				//已知时间超时，则更新已知时间
+				$this->_nextIterator->next();
+				$this->_nextTime = $this->_nextIterator->current();
+				Log::Debug("Next time update to {0}", [$this->FormatTime($this->_nextTime)]);
+			}
+
+			$timeAfter = $this->_nextTime - time();
+			if($timeAfter > $maxCallbackLimits)//timeTick最高支持86400s
+			{
+				Log::Debug("$timeAfter>$maxCallbackLimits, next reset call at " .
+				           $this->FormatTime(time() + $timeAfter));
+
+				//下次回调在一天以后，则设置一天后重新统计剩余时间
+				return swoole_timer_after($maxCallbackLimits * 1000, $tickFunc);
+			}
+			else
+			{
+				Log::Debug("$timeAfter<=$maxCallbackLimits, will call at " . $this->FormatTime($this->_nextTime));
+
+				return swoole_timer_after($timeAfter * 1000, $tickFunc, true);
+			}
+		};
+
+		return $tickFunc(false);
 	}
 
 	/**
@@ -195,6 +246,8 @@ class CrontabTicker
 		$this->_parse = '';
 		$this->_availableTimes = [];
 		$this->_log = [];
+		$this->_nextTime = 0;
+		$this->_nextIterator = null;
 	}
 
 	/**
@@ -244,9 +297,10 @@ class CrontabTicker
 	}
 
 	/**
-	 * 初始化生效的约束
+	 * 初始化生效的约束（在更高一级的约束存在时，将低级约束的默认‘*’处理成min(低级约束）的方案）
+	 * 如 * 1 * * * * 处理为0 1 * * * *
 	 */
-	private function _initLimits()
+	private function _initLimits_bak()
 	{
 		$cron = preg_split("/[\s]+/i", trim($this->_crontab));
 		if(count($cron) == 5)
@@ -282,10 +336,6 @@ class CrontabTicker
 			$this->_limits[self::MINUTE] = true;
 			$this->_limits[self::SECOND] = true;
 		}
-		//elseif($this->_isLimited(self::DAY))
-		//{
-		//	$this->_availableTimes[self::DAY] = [1 => 1];
-		//}
 
 		if($cron[2] != '*')//Hour
 		{
@@ -318,6 +368,56 @@ class CrontabTicker
 		elseif($this->_isLimited(self::SECOND))
 		{
 			$this->_availableTimes[self::SECOND] = [0 => 0];
+		}
+	}
+
+	/**
+	 * Linux crontab风格的对*的处理
+	 * 如 * 1 * * * * 处理为*\/1 1 * * * *
+	 */
+	private function _initLimits()
+	{
+		$cron = preg_split("/[\s]+/i", trim($this->_crontab));
+		if(count($cron) == 5)
+		{
+			//5个参数的时候自动补秒约束0
+			array_unshift($cron, '0');
+		}
+		$this->_availableTimes[self::MONTH] = self::_parseCrontabNumber($cron[4], 1, 12);
+		$this->_availableTimes[self::WEEK] = self::_parseCrontabNumber($cron[5], 0, 6);
+		$this->_availableTimes[self::DAY] = self::_parseCrontabNumber($cron[3], 1, 31);
+		$this->_availableTimes[self::HOUR] = self::_parseCrontabNumber($cron[2], 0, 23);
+		$this->_availableTimes[self::MINUTE] = self::_parseCrontabNumber($cron[1], 0, 59);
+		$this->_availableTimes[self::SECOND] = self::_parseCrontabNumber($cron[0], 0, 59);
+
+		if(count($this->_availableTimes[self::MONTH]) < 12)
+		{
+			$this->_limits[self::MONTH] = true;
+		}
+		if(count($this->_availableTimes[self::WEEK]) < 7)
+		{
+			$this->_limits[self::WEEK] = true;
+		}
+		if(count($this->_availableTimes[self::DAY]) < 31)
+		{
+			$this->_limits[self::DAY] = true;
+		}
+		if(count($this->_availableTimes[self::HOUR]) < 24)
+		{
+			$this->_limits[self::HOUR] = true;
+		}
+		if(count($this->_availableTimes[self::MINUTE]) < 60)
+		{
+			$this->_limits[self::MINUTE] = true;
+		}
+		if(count($this->_availableTimes[self::SECOND]) < 60)
+		{
+			$this->_limits[self::SECOND] = true;
+		}
+		if(count($this->_limits) == 0)
+		{
+			//如果没有任何一个约束，说明就是等价于* * * * * *的情况
+			$this->_limits[self::SECOND] = true;
 		}
 	}
 
@@ -426,7 +526,7 @@ class CrontabTicker
 
 	private function _countNextHour()
 	{
-		$nextHour = 0;
+		$nextHour = $this->_periods[self::HOUR];
 		if($this->_isLimited(self::HOUR) || $this->_nextPeriods[self::HOUR])
 		{
 			$nextHour = $this->_nextMatch($this->_availableTimes[self::HOUR],
@@ -451,7 +551,7 @@ class CrontabTicker
 
 	private function _countNextMinute()
 	{
-		$nextMinute = 0;
+		$nextMinute = $this->_periods[self::MINUTE];
 		if($this->_isLimited(self::MINUTE) || $this->_nextPeriods[self::MINUTE])
 		{
 			$nextMinute = $this->_nextMatch($this->_availableTimes[self::MINUTE],
@@ -470,7 +570,7 @@ class CrontabTicker
 
 	private function _countNextSecond()
 	{
-		$nextSecond = 0;
+		$nextSecond = $this->_periods[self::SECOND];
 		if($this->_isLimited(self::SECOND))
 		{
 			$nextSecond =
