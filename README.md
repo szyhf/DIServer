@@ -29,7 +29,7 @@ DIServer Framework
 
 ## 其它
 
-- [DICrontab](https://github.com/szyhf/DICrontab)一个支持Linux Crontab语法的日程表工具类库，可以在自身的服务中实现定时日程安排，精确到秒，基于swool_timmer_after实现。
+- [DICrontab](https://github.com/szyhf/DICrontab)  一个支持Linux Crontab语法的日程表工具类库，为DIServer组件之一，可以独立工作，用于实现定时日程安排，精确到秒，基于swool_timmer_after实现。
 
 
 ## 说明
