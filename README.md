@@ -4,6 +4,16 @@ DIServer Framework
 
 ## 最新消息
 + 遗憾啊，感觉快可以出第一个RC版了，公司发生了一些意外，工作变动中，最近可能会放缓更新速度。20160310
++ 整理下目前已基本完成的工具（有需要可以直接单独拿出来用）：
+
+> + IOC
+> + Configuration
+> + Session
+> + Event
+> + Middleware
+> + Crontab(tick)
+> + Monitor
+
 
 ## 简介
 
@@ -73,4 +83,4 @@ php YourServer.php start|stop|restart|reload|kill|status
 ```
 
 ## 开源许可
-Apache License Version 2.0http://www.apache.org/licenses/LICENSE-2.0.html
+[Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
